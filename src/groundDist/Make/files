@@ -1,0 +1,2 @@
+groundDist.C
+LIB = $(FOAM_USER_LIBBIN)/libgroundDist

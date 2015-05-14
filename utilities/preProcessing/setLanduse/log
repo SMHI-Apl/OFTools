@@ -1,0 +1,15 @@
+Making dependency list for source file setLanduse.C
+SOURCE=setLanduse.C ;  icpc -Dlinux64 -DDP -wd654,819,1125,1476,1505,1572 -xT -O3 -no-prec-div  -DNoRepository -I/home/openfoam/OpenFOAM/OpenFOAM-1.5.x/src/finiteVolume/lnInclude -I/home/sm_davse/OpenFOAM/sm_davse-1.5.x/run/../src/gis -I/home/sm_davse/OpenFOAM/sm_davse-1.5.x/run/../src/groundDist -I/home/openfoam/OpenFOAM/OpenFOAM-1.5.x/src/meshTools/lnInclude -IlnInclude -I. -I/home/openfoam/OpenFOAM/OpenFOAM-1.5.x/src/OpenFOAM/lnInclude -I/home/openfoam/OpenFOAM/OpenFOAM-1.5.x/src/OSspecific/Unix/lnInclude   -fPIC -Nmpi -c $SOURCE -o Make/linux64IccDPOpt/setLanduse.o
+icpc INFO: Compiling with MPI openmpi/1.2.8-i101017.
+setLanduse.C(167): error: identifier "dist" is undefined
+  	  LAD_.internalField()[celli]=dist[distIndex]*LADMax;
+  	                              ^
+
+readLanduseDict.H(24): error: identifier "landusedict" is undefined
+  landusedict.lookup("heightDistribution")>>heightDistribution;
+  ^
+
+setLanduse.C(293): error: expected a "}"
+
+compilation aborted for setLanduse.C (code 2)
+make: *** [Make/linux64IccDPOpt/setLanduse.o] Error 2

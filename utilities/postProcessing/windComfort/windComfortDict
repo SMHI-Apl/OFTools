@@ -1,0 +1,63 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.5                                   |
+|   \\  /    A nd           | Web:      http://www.OpenFOAM.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      windComfortDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+//Limit for comfort criteria, standard = 5m/s
+criteriaUlim	5.0;
+
+//Reference turbulence intensity, standard for an open field is 0.18
+Iref	0.18;
+
+//Factor when adding standard deviation for equivalent wind speed
+//Ueqv=Umean + alpha * stdDev
+alpha	1.0;
+
+
+//Points where to find the reference wind speed 
+// The  reference wind speed will be used to normalize the field
+//The points needs to be given in the same order as wdirs
+//If measurement point is within the area this should be the reference point for all wind directions
+refPoints	(
+		 (-300 -100 60)
+		 (270 290 60)
+		 (-200 -450 50)
+		 (-300 -100 58)
+		 (-300 -100 58)
+		 (-150 -300 60)
+		 (-200 -100 60)
+		 (-200 -100 60)
+		 );
+
+//The wind speed used for the archived fields, needed to identify the fields	
+wspeed	3;
+
+//All wind directions to be included in the analysis
+//The directions has to be in increasing orde, but do not have to be evenly distributed (but it is preferable)
+wdirs (0 45 90 135 180 225 270 315);
+
+//The file containing met time-series
+metFileName "/testing/test.asc";edit
+
+
+
+
+
+
+
+
+
+
+
+

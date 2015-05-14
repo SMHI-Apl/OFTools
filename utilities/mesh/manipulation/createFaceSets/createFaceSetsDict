@@ -1,0 +1,40 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.5                                   |
+|   \\  /    A nd           | Web:      http://www.OpenFOAM.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      arenaDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Name of patches to operate on, can be several
+patchNames 
+(
+  wall.roof
+);
+
+//All x,y,z limits, the first and last should be outside the patch
+xlims (-1000 -94 -53.5 -46.5 -25.5 53.5 60.5 94 1000);
+ylims (-1000 -74 -67 -60 -40.5 -33.5 33.5 40.5 67 74 1000);
+zlims (-1000 -74 -67 -60 -40.5 -33.5 33.5 40.5 67 74 1000);
+
+// choose an intervall of angle. The angle is defined as the normal of surface pointing out of the domain.
+// inside roof:  minAngle=0    maxAngle=180
+// outside roof: minAngle=180 maxAngle=360 
+normal (1 0 0);
+tol 5;
+
+//xy-plane
+//minhAngle 0;
+//maxhAngle 360;
+
+// Prefix of faceSet. An integer is added after prefix.
+prefix roofOuter;

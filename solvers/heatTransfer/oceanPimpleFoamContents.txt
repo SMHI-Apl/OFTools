@@ -1,0 +1,546 @@
+    Info<< "Reading thermophysical properties\n" << endl;
+
+    Info<< "Reading field T\n" << endl;
+    volScalarField T
+    (
+        IOobject
+        (
+            "T",
+            runTime.timeName(),
+            mesh,
+            IOobject::MUST_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh
+    );
+
+    Info<< "Reading field S\n" << endl;
+    volScalarField S
+    (
+        IOobject
+        (
+            "S",
+            runTime.timeName(),
+            mesh,
+            IOobject::MUST_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh
+    );
+
+    Info<< "Reading field p_rgh\n" << endl;
+    volScalarField p_rgh
+    (
+        IOobject
+        (
+            "p_rgh",
+            runTime.timeName(),
+            mesh,
+            IOobject::MUST_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh
+    );
+
+    Info<< "Reading field U\n" << endl;
+    volVectorField U
+    (
+        IOobject
+        (
+            "U",
+            runTime.timeName(),
+            mesh,
+            IOobject::MUST_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh
+    );
+
+    #include "createPhi.H"
+
+    #include "myReadTransportProperties.H"
+    #include "myReadDensityCoeffs.H"
+
+    Info<< "Creating turbulence model\n" << endl;
+    autoPtr<incompressible::RASModel> turbulence
+    (
+        incompressible::RASModel::New(U, phi, laminarTransport)
+    );
+
+    // Kinematic density for buoyancy force
+    volScalarField rhok
+    (
+        IOobject
+        (
+            "rhok",
+            runTime.timeName(),
+            mesh
+        ),
+	((a0 + a1*(T-T0C) + a2*pow((T-T0C),2) + a3*pow((T-T0C),3) 
+	+ a4*pow((T-T0C),4) + a5*pow((T-T0C),5))
+	+ (b0 + b1*(T-T0C) + b2*pow((T-T0C),2) + b3*pow((T-T0C),3) + b4*pow((T-T0C),4))*S 
+	+ (c0 + c1*(T-T0C) + c2*pow((T-T0C),2))*pow(S,3/2)
+	+ d0*pow(S,2))/a0
+    );
+
+    // kinematic turbulent thermal thermal conductivity m2/s
+    Info<< "Reading field kappat\n" << endl;
+    volScalarField kappat
+    (
+        IOobject
+        (
+            "kappat",
+            runTime.timeName(),
+            mesh,
+            IOobject::MUST_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh
+    );
+
+    Info<< "Calculating field g.h\n" << endl;
+    volScalarField gh("gh", g & mesh.C());
+    surfaceScalarField ghf("ghf", g & mesh.Cf());
+
+    volScalarField p
+    (
+        IOobject
+        (
+            "p",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        p_rgh + rhok*gh
+    );
+
+    label pRefCell = 0;
+    scalar pRefValue = 0.0;
+    setRefCell
+    (
+        p,
+        p_rgh,
+        mesh.solutionDict().subDict("PIMPLE"),
+        pRefCell,
+        pRefValue
+    );
+
+    if (p_rgh.needReference())
+    {
+        p += dimensionedScalar
+        (
+            "p",
+            p.dimensions(),
+            pRefValue - getRefCellValue(p, pRefCell)
+        );
+    }
+
+    Info << "\nReading coriolisProperties" << endl;
+
+    IOdictionary coriolisProperties
+    (
+        IOobject
+        (
+            "coriolisProperties",
+            runTime.constant(),
+            mesh,
+            IOobject::MUST_READ,
+            IOobject::NO_WRITE
+        )
+    );
+
+    dimensionedScalar Omega(coriolisProperties.lookup("Omega"));
+
+    dimensionedVector OmegaProjection(coriolisProperties.lookup("OmegaProjection"));
+
+    dimensionedVector twoOmega(2.0*Omega*OmegaProjection);
+    Info<< "Reading densityCoeffs\n" << endl;
+
+    IOdictionary densityCoeffs
+    (
+        IOobject
+        (
+            "densityCoeffs",
+            runTime.constant(),
+            mesh,
+            IOobject::MUST_READ,
+            IOobject::NO_WRITE
+        )
+    );
+
+    dimensionedScalar a0
+    (
+        densityCoeffs.lookup("a0")       
+    );
+
+    dimensionedScalar a1
+    (
+        densityCoeffs.lookup("a1")
+    );
+
+    dimensionedScalar a2
+    (
+        densityCoeffs.lookup("a2")       
+    );
+
+    dimensionedScalar a3
+    (
+        densityCoeffs.lookup("a3")
+    );
+
+    dimensionedScalar a4
+    (
+        densityCoeffs.lookup("a4")       
+    );
+
+    dimensionedScalar a5
+    (
+        densityCoeffs.lookup("a5")
+    );
+
+    dimensionedScalar b0
+    (
+        densityCoeffs.lookup("b0")       
+    );
+
+    dimensionedScalar b1
+    (
+        densityCoeffs.lookup("b1")
+    );
+
+    dimensionedScalar b2
+    (
+        densityCoeffs.lookup("b2")       
+    );
+
+    dimensionedScalar b3
+    (
+        densityCoeffs.lookup("b3")
+    );
+
+    dimensionedScalar b4
+    (
+        densityCoeffs.lookup("b4")       
+    );
+
+    dimensionedScalar c0
+    (
+        densityCoeffs.lookup("c0")       
+    );
+
+    dimensionedScalar c1
+    (
+        densityCoeffs.lookup("c1")
+    );
+
+    dimensionedScalar c2
+    (
+        densityCoeffs.lookup("c2")       
+    );
+
+    dimensionedScalar d0
+    (
+        densityCoeffs.lookup("d0")       
+    );
+
+/*
+    dimensionedScalar T0C
+    (
+        densityCoeffs.lookup("T0C")       
+    );
+
+*/
+    Info<< "Reading lowerBoundValues\n" << endl;
+
+    IOdictionary lowerBoundValues
+    (
+        IOobject
+        (
+            "lowerBoundValues",
+            runTime.constant(),
+            mesh,
+            IOobject::MUST_READ,
+            IOobject::NO_WRITE
+        )
+    );
+
+    dimensionedScalar TMin
+    (
+        lowerBoundValues.lookup("TMin")
+    );
+
+    dimensionedScalar SMin
+    (
+        lowerBoundValues.lookup("SMin")
+    );
+
+    singlePhaseTransportModel laminarTransport(U, phi);
+
+    // Laminar Prandtl number
+    dimensionedScalar Pr(laminarTransport.lookup("Pr"));
+
+    // Turbulent Prandtl number
+    dimensionedScalar Prt(laminarTransport.lookup("Prt"));
+
+    // Laminar Prandtl number for salt transport equation
+    dimensionedScalar PrS(laminarTransport.lookup("PrS"));
+
+    // Turbulent Prandtl number for salt transport equation
+    dimensionedScalar PrtS(laminarTransport.lookup("PrtS"));
+
+    // T0C
+    dimensionedScalar T0C(laminarTransport.lookup("T0C"));
+
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of Walters own OpenFOAM library.
+
+    OpenFOAM is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
+
+Application
+    buoyantCoriolisPimpleFoam - based on buoyantBoussinesqPimpleFoam
+
+Description
+    Transient solver for buoyant, turbulent flow of incompressible fluids
+
+    Uses another version of the Boussinesq approximation:
+    \f[
+        rho_{k} = 1 - beta(T - T_{ref})
+    \f]
+
+    where:
+        \f$ rho_{k} \f$ = the effective (driving) kinematic density
+        beta = thermal expansion coefficient [1/K]
+        T = temperature [K]
+        \f$ T_{ref} \f$ = reference temperature [K]
+
+    Valid when:
+    \f[
+        rho_{k} << 1
+    \f]
+
+\*---------------------------------------------------------------------------*/
+
+#include "fvCFD.H"
+#include "singlePhaseTransportModel.H"
+#include "RASModel.H"
+#include "pimpleControl.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+int main(int argc, char *argv[])
+{
+    #include "setRootCase.H"
+    #include "createTime.H"
+    #include "createMesh.H"
+    #include "readGravitationalAcceleration.H"
+    #include "createFields.H"
+    #include "initContinuityErrs.H"
+    #include "readTimeControls.H"
+    #include "CourantNo.H"
+    #include "setInitialDeltaT.H"
+    #include "myReadLowerBoundValues.H"
+    #include "myReadCoriolisProperties.H"
+
+    pimpleControl pimple(mesh);
+
+    // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+    Info<< "\nStarting time loop\n" << endl;
+
+    while (runTime.loop())
+    {
+        Info<< "Time = " << runTime.timeName() << nl << endl;
+
+        #include "readTimeControls.H"
+        #include "CourantNo.H"
+        #include "setDeltaT.H"
+
+        // --- Pressure-velocity PIMPLE corrector loop
+        for (pimple.start(); pimple.loop(); pimple++)
+        {
+            if (pimple.nOuterCorr() != 1)
+            {
+                p_rgh.storePrevIter();
+            }
+
+            #include "UEqn.H"
+            #include "TEqn.H"
+            #include "SEqn.H"
+
+            // --- PISO loop
+            for (int corr=0; corr<pimple.nCorr(); corr++)
+            {
+                #include "pEqn.H"
+            }
+
+            if (pimple.turbCorr())
+            {
+                turbulence->correct();
+            }
+        }
+
+        runTime.write();
+
+        Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
+            << "  ClockTime = " << runTime.elapsedClockTime() << " s"
+            << nl << endl;
+    }
+
+    Info<< "End\n" << endl;
+
+    return 0;
+}
+
+
+// ************************************************************************* //
+{
+    volScalarField rAU("rAU", 1.0/UEqn.A());
+    surfaceScalarField rAUf("(1|A(U))", fvc::interpolate(rAU));
+
+    U = rAU*UEqn.H();
+
+    phi = (fvc::interpolate(U) & mesh.Sf())
+        + fvc::ddtPhiCorr(rAU, U, phi);
+
+    surfaceScalarField buoyancyPhi(rAUf*ghf*fvc::snGrad(rhok)*mesh.magSf());
+    phi -= buoyancyPhi;
+
+    for (int nonOrth=0; nonOrth<=pimple.nNonOrthCorr(); nonOrth++)
+    {
+        fvScalarMatrix p_rghEqn
+        (
+            fvm::laplacian(rAUf, p_rgh) == fvc::div(phi)
+        );
+
+        p_rghEqn.setReference(pRefCell, getRefCellValue(p_rgh, pRefCell));
+
+        p_rghEqn.solve
+        (
+            mesh.solver(p_rgh.select(pimple.finalInnerIter(corr, nonOrth)))
+        );
+
+        if (nonOrth == pimple.nNonOrthCorr())
+        {
+            // Calculate the conservative fluxes
+            phi -= p_rghEqn.flux();
+
+            // Explicitly relax pressure for momentum corrector
+            p_rgh.relax();
+
+            // Correct the momentum source with the pressure gradient flux
+            // calculated from the relaxed pressure
+            U -= rAU*fvc::reconstruct((buoyancyPhi + p_rghEqn.flux())/rAUf);
+            U.correctBoundaryConditions();
+        }
+    }
+
+    #include "continuityErrs.H"
+
+    p = p_rgh + rhok*gh;
+
+    if (p_rgh.needReference())
+    {
+        p += dimensionedScalar
+        (
+            "p",
+            p.dimensions(),
+            pRefValue - getRefCellValue(p, pRefCell)
+        );
+        p_rgh = p - rhok*gh;
+    }
+}
+{
+  //    volScalarField kappatS("kappatS",turbulence->nut()/PrtS);
+    volScalarField kappatS=turbulence->nut()/PrtS;
+    //    kappatS.correctBoundaryConditions(); 
+
+    volScalarField kappaEffS("kappaEffS", turbulence->nu()/PrS + kappatS);
+    kappatS.clear();
+
+    fvScalarMatrix SEqn
+    (
+        fvm::ddt(S)
+      + fvm::div(phi, S)
+      - fvm::laplacian(kappaEffS, S)
+    );
+
+    kappaEffS.clear();
+
+    SEqn.relax();
+    SEqn.solve();
+
+    //    rhok = 1.0 - beta*(T - TRef);
+	
+    volScalarField TC=T-T0C;//;273.15;
+
+    rhok = (a0 + (a1 + (a2 + (a3 + (a4 + a5*TC)*TC)*TC)*TC)*TC
+      + (b0 + (b1 + (b2 + (b3 + b4*TC)*TC)*TC)*TC)*S
+	    + (c0 + (c1 + c2*TC)*TC)*pow(S,3/2) + d0*S*S)/a0;
+
+    TC.clear();
+}
+{
+    kappat = turbulence->nut()/Prt;
+    kappat.correctBoundaryConditions();
+
+    volScalarField kappaEff("kappaEff", turbulence->nu()/Pr + kappat);
+
+    fvScalarMatrix TEqn
+    (
+        fvm::ddt(T)
+      + fvm::div(phi, T)
+      - fvm::laplacian(kappaEff, T)
+    );
+
+    TEqn.relax();
+    TEqn.solve();
+
+    //    rhok = 1.0 - beta*(T - TRef); //kinematik density calculated in S eqn
+}
+    // Solve the momentum equation
+
+    fvVectorMatrix UEqn
+    (
+        fvm::ddt(U)
+      + fvm::div(phi, U)
+      + turbulence->divDevReff(U)
+      + (twoOmega ^ U)//added by walter
+    );
+
+    UEqn.relax();
+
+    if (pimple.momentumPredictor())
+    {
+        solve
+        (
+            UEqn
+         ==
+            fvc::reconstruct
+            (
+                (
+                  - ghf*fvc::snGrad(rhok)
+                  - fvc::snGrad(p_rgh)
+                )*mesh.magSf()
+            )
+        );
+    }
+

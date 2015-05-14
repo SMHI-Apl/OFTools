@@ -1,0 +1,244 @@
+16a17,30
+>     Info<< "Reading field S\n" << endl;
+>     volScalarField S
+>     (
+>         IOobject
+>         (
+>             "S",
+>             runTime.timeName(),
+>             mesh,
+>             IOobject::MUST_READ,
+>             IOobject::AUTO_WRITE
+>         ),
+>         mesh
+>     );
+> 
+47c61,62
+<     #include "readTransportProperties.H"
+---
+>     #include "myReadTransportProperties.H"
+>     #include "myReadDensityCoeffs.H"
+64c79,83
+<         1.0 - beta*(T - TRef)
+---
+> 	((a0 + a1*(T-T0C) + a2*pow((T-T0C),2) + a3*pow((T-T0C),3) 
+> 	+ a4*pow((T-T0C),4) + a5*pow((T-T0C),5))
+> 	+ (b0 + b1*(T-T0C) + b2*pow((T-T0C),2) + b3*pow((T-T0C),3) + b4*pow((T-T0C),4))*S 
+> 	+ (c0 + c1*(T-T0C) + c2*pow((T-T0C),2))*pow(S,3/2)
+> 	+ d0*pow(S,2))/a0
+120c139,180
+<     singlePhaseTransportModel laminarTransport(U, phi);
+---
+>     Info << "\nReading coriolisProperties" << endl;
+> 
+>     IOdictionary coriolisProperties
+>     (
+>         IOobject
+>         (
+>             "coriolisProperties",
+>             runTime.constant(),
+>             mesh,
+>             IOobject::MUST_READ,
+>             IOobject::NO_WRITE
+>         )
+>     );
+> 
+>     dimensionedScalar Omega(coriolisProperties.lookup("Omega"));
+> 
+>     dimensionedVector OmegaProjection(coriolisProperties.lookup("OmegaProjection"));
+> 
+>     dimensionedVector twoOmega(2.0*Omega*OmegaProjection);
+>     Info<< "Reading densityCoeffs\n" << endl;
+> 
+>     IOdictionary densityCoeffs
+>     (
+>         IOobject
+>         (
+>             "densityCoeffs",
+>             runTime.constant(),
+>             mesh,
+>             IOobject::MUST_READ,
+>             IOobject::NO_WRITE
+>         )
+>     );
+> 
+>     dimensionedScalar a0
+>     (
+>         densityCoeffs.lookup("a0")       
+>     );
+> 
+>     dimensionedScalar a1
+>     (
+>         densityCoeffs.lookup("a1")
+>     );
+122,123c182,185
+<     // Thermal expansion coefficient [1/K]
+<     dimensionedScalar beta(laminarTransport.lookup("beta"));
+---
+>     dimensionedScalar a2
+>     (
+>         densityCoeffs.lookup("a2")       
+>     );
+125,126c187,278
+<     // Reference temperature [K]
+<     dimensionedScalar TRef(laminarTransport.lookup("TRef"));
+---
+>     dimensionedScalar a3
+>     (
+>         densityCoeffs.lookup("a3")
+>     );
+> 
+>     dimensionedScalar a4
+>     (
+>         densityCoeffs.lookup("a4")       
+>     );
+> 
+>     dimensionedScalar a5
+>     (
+>         densityCoeffs.lookup("a5")
+>     );
+> 
+>     dimensionedScalar b0
+>     (
+>         densityCoeffs.lookup("b0")       
+>     );
+> 
+>     dimensionedScalar b1
+>     (
+>         densityCoeffs.lookup("b1")
+>     );
+> 
+>     dimensionedScalar b2
+>     (
+>         densityCoeffs.lookup("b2")       
+>     );
+> 
+>     dimensionedScalar b3
+>     (
+>         densityCoeffs.lookup("b3")
+>     );
+> 
+>     dimensionedScalar b4
+>     (
+>         densityCoeffs.lookup("b4")       
+>     );
+> 
+>     dimensionedScalar c0
+>     (
+>         densityCoeffs.lookup("c0")       
+>     );
+> 
+>     dimensionedScalar c1
+>     (
+>         densityCoeffs.lookup("c1")
+>     );
+> 
+>     dimensionedScalar c2
+>     (
+>         densityCoeffs.lookup("c2")       
+>     );
+> 
+>     dimensionedScalar d0
+>     (
+>         densityCoeffs.lookup("d0")       
+>     );
+> 
+> /*
+>     dimensionedScalar T0C
+>     (
+>         densityCoeffs.lookup("T0C")       
+>     );
+> 
+> */
+>     Info<< "Reading lowerBoundValues\n" << endl;
+> 
+>     IOdictionary lowerBoundValues
+>     (
+>         IOobject
+>         (
+>             "lowerBoundValues",
+>             runTime.constant(),
+>             mesh,
+>             IOobject::MUST_READ,
+>             IOobject::NO_WRITE
+>         )
+>     );
+> 
+>     dimensionedScalar TMin
+>     (
+>         lowerBoundValues.lookup("TMin")
+>     );
+> 
+>     dimensionedScalar SMin
+>     (
+>         lowerBoundValues.lookup("SMin")
+>     );
+> 
+>     singlePhaseTransportModel laminarTransport(U, phi);
+132a285,294
+> 
+>     // Laminar Prandtl number for salt transport equation
+>     dimensionedScalar PrS(laminarTransport.lookup("PrS"));
+> 
+>     // Turbulent Prandtl number for salt transport equation
+>     dimensionedScalar PrtS(laminarTransport.lookup("PrtS"));
+> 
+>     // T0C
+>     dimensionedScalar T0C(laminarTransport.lookup("T0C"));
+> 
+141c303
+<     This file is part of OpenFOAM.
+---
+>     This file is part of Walters own OpenFOAM library.
+157c319
+<     buoyantBoussinesqPimpleFoam
+---
+>     buoyantCoriolisPimpleFoam - based on buoyantBoussinesqPimpleFoam
+162c324
+<     Uses the Boussinesq approximation:
+---
+>     Uses another version of the Boussinesq approximation:
+197a360,361
+>     #include "myReadLowerBoundValues.H"
+>     #include "myReadCoriolisProperties.H"
+222a387
+>             #include "SEqn.H"
+306a472,501
+>   //    volScalarField kappatS("kappatS",turbulence->nut()/PrtS);
+>     volScalarField kappatS=turbulence->nut()/PrtS;
+>     //    kappatS.correctBoundaryConditions(); 
+> 
+>     volScalarField kappaEffS("kappaEffS", turbulence->nu()/PrS + kappatS);
+>     kappatS.clear();
+> 
+>     fvScalarMatrix SEqn
+>     (
+>         fvm::ddt(S)
+>       + fvm::div(phi, S)
+>       - fvm::laplacian(kappaEffS, S)
+>     );
+> 
+>     kappaEffS.clear();
+> 
+>     SEqn.relax();
+>     SEqn.solve();
+> 
+>     //    rhok = 1.0 - beta*(T - TRef);
+> 	
+>     volScalarField TC=T-T0C;//;273.15;
+> 
+>     rhok = (a0 + (a1 + (a2 + (a3 + (a4 + a5*TC)*TC)*TC)*TC)*TC
+>       + (b0 + (b1 + (b2 + (b3 + b4*TC)*TC)*TC)*TC)*S
+> 	    + (c0 + (c1 + c2*TC)*TC)*pow(S,3/2) + d0*S*S)/a0;
+> 
+>     TC.clear();
+> }
+> {
+322c517
+<     rhok = 1.0 - beta*(T - TRef);
+---
+>     //    rhok = 1.0 - beta*(T - TRef); //kinematik density calculated in S eqn
+330a526
+>       + (twoOmega ^ U)//added by walter
+349a546
+> 

@@ -1,0 +1,3 @@
+derived/fixedMeanValue/fixedMeanValueFvPatchFields.C
+LIB = $(FOAM_USER_LIBBIN)/libfiniteVolumeExt
+

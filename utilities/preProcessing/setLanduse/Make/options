@@ -1,0 +1,14 @@
+EXE_INC = \
+    -I$(FOAM_SRC)/finiteVolume/lnInclude \
+    -I$(FOAM_RUN)/../src/gis \
+    -I$(FOAM_RUN)/../src/groundDist \
+    -I$(FOAM_SRC)/turbulenceModels/incompressible/RAS/lnInclude \
+    -I$(FOAM_SRC)/meshTools/lnInclude
+
+EXE_LIBS = \
+    -L$(FOAM_USER_LIBBIN) \
+    -lgis \
+    -lgroundDist \
+    -lincompressibleRASModels \
+    -lfiniteVolume \
+    -lmeshTools
