@@ -1,4 +1,3 @@
-realizableKE_Veh/realizableKE_Veh.C
 kEpsilon_canopy/kEpsilon_canopy.C
 
 LIB = $(FOAM_USER_LIBBIN)/libmyIncompressibleRASModels

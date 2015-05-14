@@ -1,5 +1,5 @@
 EXE_INC = \
-    -I$(FOAM_RUN)/../src/turbulenceModels/incompressible/RAS/kEpsilon_canopy \
+    -I$(FOAM_RUN)/../applications/src/turbulenceModels/incompressible/RAS/kEpsilon_canopy \
     -I$(LIB_SRC)/turbulenceModels/incompressible/RAS/lnInclude \
     -I$(LIB_SRC)/turbulenceModels \
     -I$(LIB_SRC)/transportModels \
