@@ -1,28 +1,30 @@
 {
-    p.boundaryField().updateCoeffs();
-
     volScalarField rAU(1.0/UEqn().A());
-    U = rAU*UEqn().H();
+    volVectorField HbyA("HbyA", U);
+    HbyA = rAU*UEqn().H();
     UEqn.clear();
 
-    phi = fvc::interpolate(U, "interpolate(HbyA)") & mesh.Sf();
-    adjustPhi(phi, U, p);
+    surfaceScalarField phiHbyA("phiHbyA", fvc::interpolate(HbyA) & mesh.Sf());
+
+    fvOptions.makeRelative(phiHbyA);
+
+    adjustPhi(phiHbyA, U, p);
 
     // Non-orthogonal pressure corrector loop
-    for (int nonOrth=0; nonOrth<=simple.nNonOrthCorr(); nonOrth++)
+    while (simple.correctNonOrthogonal())
     {
         fvScalarMatrix pEqn
         (
-            fvm::laplacian(rAU, p) == fvc::div(phi)
+            fvm::laplacian(rAU, p) == fvc::div(phiHbyA)
         );
 
         pEqn.setReference(pRefCell, pRefValue);
 
         pEqn.solve();
 
-        if (nonOrth == simple.nNonOrthCorr())
+        if (simple.finalNonOrthogonalIter())
         {
-            phi -= pEqn.flux();
+            phi = phiHbyA - pEqn.flux();
         }
     }
 
@@ -32,6 +34,7 @@
     p.relax();
 
     // Momentum corrector
-    U -= rAU*fvc::grad(p);
+    U = HbyA - rAU*fvc::grad(p);
     U.correctBoundaryConditions();
+    fvOptions.correct(U);
 }
