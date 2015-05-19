@@ -1,4 +1,4 @@
- Info<< "Reading landuse field" << endl;
+    Info<< "Creating landuse field" << endl;
     volScalarField landuse
     (
         IOobject
@@ -13,6 +13,7 @@
 	dimensionedScalar("landuse",dimensionSet (0,0,0,0,0,0,0),-1)
     );
 
+    Info<< "Reading boundaryfield nut\n" << endl;
     volScalarField nut
     (
         IOobject
@@ -27,7 +28,7 @@
 	dimensionedScalar("nut",dimensionSet (0,2,-1,0,0,0,0),0)
     );
 
-
+    Info<< "Creating field LAI\n" << endl;
     volScalarField LAD
     (
         IOobject
@@ -41,3 +42,45 @@
         mesh,
 	dimensionedScalar("LAD",dimensionSet (0,-1,0,0,0,0,0),0)
     );
+
+    // Info<< "Reading boundaryfield U\n" << endl;
+    // volVectorField U
+    // (
+    //     IOobject
+    //     (
+    //         "U",
+    //         runTime.timeName(),
+    //         mesh,
+    //         IOobject::MUST_READ,
+    //         IOobject::AUTO_WRITE
+    //     ),
+    //     mesh
+    // );
+
+    // Info << "Reading field epsilon\n" << endl;
+    // volScalarField epsilon
+    // (
+    //     IOobject
+    //     (
+    //         "epsilon",
+    //         runTime.timeName(),
+    //         mesh,
+    //         IOobject::MUST_READ,
+    //         IOobject::AUTO_WRITE
+    //     ),
+    //     mesh
+    // );
+
+    // Info << "Reading field k\n" << endl;
+    // volScalarField k
+    // (
+    //     IOobject
+    //     (
+    //         "k",
+    //         runTime.timeName(),
+    //         mesh,
+    //         IOobject::MUST_READ,
+    //         IOobject::AUTO_WRITE
+    //     ),
+    //     mesh
+    // );

@@ -107,7 +107,93 @@ scalar getMaxLAD(scalarList dist,scalar h,scalar LAI)
   return maxLAD;
 }
 
-void setLanduse(label landuseCode, wordList sourcePatches, volScalarField &landuse_, volScalarField &LAD_, volScalarField &nut_, scalarList heightDist, List<tensor> &landuseList, Raster &lu, word dataSource)
+
+// void setInlet(volVectorField &U_, scalar direction, scalar Umag) {
+//   const scalar pi=3.1415926536;
+//   vector Uref(0, 0 ,0);
+//   scalar dirRad=pi/180*(90.-direction);
+//   Uref.x()=-1*Foam::cos(dirRad);
+//   Uref.y()=-1*Foam::sin(dirRad);
+//   if(Uref.x()<1e-6 && Uref.x()>-1e-6)
+//     Uref.x()=0.0;
+//   if(Uref.y()<1e-6 && Uref.y()>-1e-6)
+//     Uref.y()=0.0;
+
+//   int number_of_patches=1;
+
+//   const fvMesh & mesh=U_.mesh();
+//   if (direction==360 || direction==0){
+//     patchI = mesh.boundaryMesh().findPatchID("north");
+//     Info<< "Found patch north at index " << patchI << endl;
+//   }
+//   else if (direction == 90) {
+//     patchI = mesh.boundaryMesh().findPatchID("east");
+//     Info<< "Found patch east at index " << patchI << endl;
+//   }
+//   else if (direction == 180){
+//     patchI = mesh.boundaryMesh().findPatchID("south");
+//     Info<< "Found patch south at index " << patchI << endl;
+//   }
+//   else if (direction == 270){
+//     patchI = mesh.boundaryMesh().findPatchID("west");
+//     Info<< "Found patch west at index " << patchI << endl;
+//   }
+//   else
+//     {
+//       number_of_patches=2;
+//       if(direction>0 && direction <90)
+// 	{
+// 	  patchI=mesh.boundaryMesh().findPatchID("north");
+// 	  patchII=mesh.boundaryMesh().findPatchID("east");
+// 	  Info<< "Found patches north and east at index " << patchI <<" and" << patchII<< endl;
+// 	}
+//       else if(direction>90 && direction <180)
+// 	{
+// 	  patchI=mesh.boundaryMesh().findPatchID("east");
+// 	  patchII=mesh.boundaryMesh().findPatchID("south");
+// 	  Info<< "Found patches east and south at index " << patchI <<" and" << patchII<< endl;
+// 	}
+//       else if(direction>180 && direction <270)
+// 	{
+// 	  patchI=mesh.boundaryMesh().findPatchID("south");
+// 	  patchII=mesh.boundaryMesh().findPatchID("west");
+// 	  Info<< "Found patches south and west at index " << patchI <<" and" << patchII<< endl;
+// 	}
+//       else
+// 	{
+// 	  patchI=mesh.boundaryMesh().findPatchID("west");
+// 	  patchII=mesh.boundaryMesh().findPatchID("north");
+// 	  Info<< "Found patches west and north at index " << patchI <<" and" << patchII<< endl;
+// 	}
+//       if (patchII == -1)
+// 	{
+// 	  Info<< "Cannot find inlet patch\n" << endl;
+// 	  FatalErrorIn(args.executable())
+// 	    << "Cannot find inlet patch" << exit(FatalError);
+// 	}
+//     }
+
+//   // Declaring and initializing references to boundary patches
+//   const polyPatch& pp = mesh.boundaryMesh()[patchI];
+//   fixedValueFvPatchVectorField& inletVelocity =
+//     refCast<fixedValueFvPatchVectorField>(U.boundaryField()[patchI]);
+//   fixedValueFvPatchScalarField& inletTurb =
+//     refCast<fixedValueFvPatchScalarField>(k.boundaryField()[patchI]);
+//   fixedValueFvPatchScalarField& inletEps =
+//     refCast<fixedValueFvPatchScalarField>(epsilon.boundaryField()[patchI]);
+
+//   Info<< "Wind mag. is " << Umag << " ,Wind dir. is "<< direction <<" degrees" << endl;
+//   Info<< "X comp. of U at 10 m is " << U10.x() << endl;
+//   Info<< "Y comp. of U at 10 m is " << U10.y() << endl;
+
+// }
+
+
+
+void setLanduse(label landuseCode, wordList sourcePatches,
+		volScalarField &landuse_, volScalarField &LAD_,
+		volScalarField &nut_, scalarList heightDist,
+		List<tensor> &landuseList, Raster &lu, word dataSource)
 {
   const fvMesh & mesh=landuse_.mesh();
   labelHashSet patchIDs(sourcePatches.size());
@@ -117,15 +203,14 @@ void setLanduse(label landuseCode, wordList sourcePatches, volScalarField &landu
       patchIDs.insert(patchI);
 
       const polyPatch& pp = mesh.boundaryMesh()[patchI];
-      //      fixedValueFvPatchScalarField& patchLanduse=
-      //	refCast<fixedValueFvPatchScalarField>(landuse_.boundaryField()[patchI]);
+
       forAll(landuse_.boundaryField()[patchI],facei)
 	{
 	  scalar x=pp.faceCentres()[facei].x();
 	  scalar y=pp.faceCentres()[facei].y();
+
 	  if(dataSource=="fromFile")
 	    landuseCode=label(lu.getValue(double(x),double(y)));
-	  //patchLanduse[facei]=landuseCode;
 	  landuse_.boundaryField()[patchI][facei]=scalar(landuseCode);
 	}
 
