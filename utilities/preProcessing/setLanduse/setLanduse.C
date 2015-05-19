@@ -113,7 +113,6 @@ void setLanduse(label landuseCode, wordList sourcePatches, volScalarField &landu
   labelHashSet patchIDs(sourcePatches.size());
   forAll(sourcePatches,sp)
     {
-
       label patchI=mesh.boundaryMesh().findPatchID(sourcePatches[sp]);
       patchIDs.insert(patchI);
 
@@ -139,9 +138,9 @@ void setLanduse(label landuseCode, wordList sourcePatches, volScalarField &landu
 	}
 
     }
-  //Create a mapping beween lu-code and index in tensorList
-  //labelList indexMap(maxCode(landuseList));
-  //mapCodeIndices(landuseList, indexMap);
+  // Create a mapping beween lu-code and index in tensorList
+  // labelList indexMap(maxCode(landuseList));
+  // mapCodeIndices(landuseList, indexMap);
 
   HashTable<label,label> indexMap(landuseList.size());
   forAll(landuseList,codei)
@@ -173,11 +172,11 @@ void setLanduse(label landuseCode, wordList sourcePatches, volScalarField &landu
       
       if(dataSource=="fromFile")
 	landuseCode=label(lu.getValue(double(x),double(y)));
-            
+
       tensor code=landuseList[indexMap[landuseCode]];
       scalar height=code.yz();
       scalar groundDistance=d.internalField()[celli];
-      if (groundDistance<height)
+      if (groundDistance<height && height != 0)
 	{
 	  landuse_.internalField()[celli]=landuseCode;
 	  label distIndex = label(round(groundDistance/height*10));//assumes that the heightDistribution is described by 11 values(step of 0.1*h) thus giving indices 0-10

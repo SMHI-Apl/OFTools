@@ -168,7 +168,7 @@ double Raster::getValue(double x, double y)
 	int row,col;
 	if(!getIndex(x,y,row,col))
 	  {
-	    std::cout<<"Value is outside of raster boundaries";
+              std::cout<<"Value in "<<x<<","<<y<<" is outside of raster boundaries";
 	    exit(1);
 	  }
 	else
