@@ -18,6 +18,11 @@ Info<< "Reading source face names from dictionary" << endl;
 wordList sourcePatches;
 landuseDict.lookup("sourcePatches") >> sourcePatches;
 
+fileName rasterFileName;
+landuseDict.lookup("rasterFileName") >> rasterFileName;
+
+Switch readFromRaster(landuseDict.lookup("readFromRaster"));
+
 scalarList patchLanduse;
 landuseDict.lookup("patchLanduse") >> patchLanduse;
 scalarList heightDistribution;

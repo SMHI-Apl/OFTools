@@ -41,7 +41,7 @@
 #include "Raster.H"
 
 #ifndef namespaceFoam
-#define namespaceFoam    
+#define namespaceFoam
 using namespace Foam;
 #endif
 
@@ -49,12 +49,11 @@ using namespace Foam;
 
 bool foundCode(List<tensor> codes, label code)
 {
-  forAll(codes,codei) 
+  forAll(codes,codei)
     {
       tensor codeTensor=codes[codei];
-      if(codeTensor.xx()==code)	
+      if(codeTensor.xx()==code)
 	return true;
-      
     }
   return false;
 }
@@ -62,11 +61,11 @@ bool foundCode(List<tensor> codes, label code)
 label maxCode(const List<tensor> &codes)
 {
   scalar maxCode=0;
-  forAll(codes,codei) 
+  forAll(codes,codei)
     {
       tensor codeTensor=codes[codei];
       if(codeTensor.xx()>maxCode)
-	maxCode=codeTensor.xx();      
+	maxCode=codeTensor.xx();
     }
   return label(maxCode);
 }
@@ -193,7 +192,8 @@ scalar getMaxLAD(scalarList dist,scalar h,scalar LAI)
 void setLanduse(label landuseCode, wordList sourcePatches,
 		volScalarField &landuse_, volScalarField &LAD_,
 		volScalarField &nut_, scalarList heightDist,
-		List<tensor> &landuseList, Raster &lu, word dataSource)
+		List<tensor> &landuseList, Raster &lu,
+		Switch readFromRaster)
 {
   const fvMesh & mesh=landuse_.mesh();
   labelHashSet patchIDs(sourcePatches.size());
@@ -209,7 +209,7 @@ void setLanduse(label landuseCode, wordList sourcePatches,
 	  scalar x=pp.faceCentres()[facei].x();
 	  scalar y=pp.faceCentres()[facei].y();
 
-	  if(dataSource=="fromFile")
+	  if(readFromRaster)
 	    landuseCode=label(lu.getValue(double(x),double(y)));
 	  landuse_.boundaryField()[patchI][facei]=scalar(landuseCode);
 	}
@@ -248,14 +248,14 @@ void setLanduse(label landuseCode, wordList sourcePatches,
      calculatedFvPatchScalarField::typeName
      );
   d = (const volScalarField&) groundDist(mesh,patchIDs).y();
-  
+
   forAll(d.internalField(),celli)
     {
       scalar x=mesh.C()[celli].x();
       scalar y=mesh.C()[celli].y();
       scalar z=mesh.C()[celli].z();
-      
-      if(dataSource=="fromFile")
+
+      if(readFromRaster)
 	landuseCode=label(lu.getValue(double(x),double(y)));
 
       tensor code=landuseList[indexMap[landuseCode]];
@@ -268,78 +268,68 @@ void setLanduse(label landuseCode, wordList sourcePatches,
 	  scalar LADMax=code.zx();
 	  LAD_.internalField()[celli]=heightDist[distIndex]*LADMax;
 	}
-    }	  
+    }
 }
 
 
 int main(int argc, char *argv[])
 {
   // argList::validArgs.append(".asc file");
-  argList::validOptions.insert("raster", "rasterFile");  
+  // argList::validOptions.insert("raster", "rasterFile");
 #   include "setRootCase.H"
 #   include "createTime.H"
 #   include "createMesh.H"
 #   include "createFields.H"
 #   include "readLanduseDict.H"
 
-
-  fileName rasterName;
-  bool readRaster = args.options().found("raster");
-  word dataSource("Manual");
-  if (readRaster)
-    {
-      rasterName=fileName(args.options()["raster"]);
-      dataSource="fromFile";
-    }
-
   label categoryNum = landuseList.size();
 
   if(categoryNum==0)
-    FatalErrorIn(args.executable()) 
+    FatalErrorIn(args.executable())
       << "Missing landuse classes in dictionary landuseData"
       << exit(FatalError);
 
-  if(sourcePatches.size()==0 && dataSource=="Manual")
+  if(sourcePatches.size() == 0 && !readFromRaster)
     Info<< "Warning: No source patches given for landuse data";
 
-  if(patchLanduse.size()!=sourcePatches.size() && dataSource == "Manual")
+  if((patchLanduse.size() != sourcePatches.size()) && !readFromRaster)
     FatalErrorIn(args.executable())
       << "Wrong number of rows in patchLanduse,"
       <<"should be equal to number of source patches "
       << exit(FatalError);
-  
+
   Raster lu;
-  if(dataSource=="fromFile")
+  if(readFromRaster)
     {
-      if(!lu.read(rasterName.c_str()))
+      if(!lu.read(rasterFileName.c_str()))
 	FatalErrorIn(args.executable())
-	  << "Cannot read file " << rasterName << exit(FatalError);
-      
-      lu.xll=lu.xll-double(subtractedX);
-      lu.xur=lu.xur-double(subtractedX);
-      lu.yll=lu.yll-double(subtractedY);
-      lu.yur=lu.yur-double(subtractedY);
-        
-      Info<<"-----------Raster specification-------------"<<endl;
-      Info<<"Extent: "<<lu.xll<<"< X <"<<lu.xur<<" and "
-	  <<lu.yll<<"< Y <"<<lu.yur<<endl;
-      Info<<"Dimensions: "<<"cellsize="<<lu.cellsize
-	  <<" nrows= "<<lu.nrows<<" ncols= "<<lu.ncols<<endl; 
-    }      
- 
+	  << "Cannot read file " << rasterFileName << exit(FatalError);
+
+      lu.xll = lu.xll - double(subtractedX);
+      lu.xur = lu.xur - double(subtractedX);
+      lu.yll = lu.yll - double(subtractedY);
+      lu.yur = lu.yur - double(subtractedY);
+
+      Info << "-----------Raster specification-------------" << endl;
+      Info << "Extent: " << lu.xll << "< X <" << lu.xur << " and "
+	   << lu.yll << "< Y <" << lu.yur << endl;
+      Info << "Dimensions: " << "cellsize=" << lu.cellsize
+	   << " nrows= " << lu.nrows << " ncols= " << lu.ncols << endl;
+    }
+
   //Check that all codes of raster exist in code table
   //   if(!foundCode(landuseList))
   // FatalErrorIn(args.executable()) <<": landuse code not found in landuseList in dictionary landuseData" <<exit(FatalError);
-   
+
   //Initializing the landuse internalField and values on wall patches
-  landuse.internalField()=-1;
-  const fvPatchList& patches=mesh.boundary();
+  landuse.internalField() = -1;
+  const fvPatchList& patches = mesh.boundary();
   forAll(patches,patchI)
     {
-      const fvPatch& curPatch=patches[patchI];
+      const fvPatch& curPatch = patches[patchI];
       if(isType<wallFvPatch>(curPatch))
 	landuse.boundaryField()[patchI]=-1;
-    }	  
+    }
 
   forAll(landuseList,codei)
     {
@@ -350,51 +340,56 @@ int main(int argc, char *argv[])
 	scalar maxLAD = getMaxLAD(heightDistribution,height,LAI);
 	landuseList[codei].zx()=maxLAD;
 	}
-    } 
-
-  Info<<"Landuse categories"<<endl;
-  Info<<"id\tCd\tLAI\tfrac\tz0\theight\tmaxLAD"<<endl;
-  forAll(landuseList,codei)
-    {
-      tensor code=landuseList[codei];
-      Info<<code.xx()<<"\t"<<code.xy()<<"\t"<<code.xz()
-	  <<"\t"<<code.yx()<<"\t"<<code.yy()<<"\t"<<code.yz()
-	  <<"\t"<<code.zx()<<endl;
     }
 
-  if (dataSource=="fromFile")
+  Info << "Landuse categories" << endl;
+  Info << "id\tCd\tLAI\tfrac\tz0\theight\tmaxLAD" << endl;
+  forAll(landuseList, codei)
     {
-      forAll(sourcePatches,sp)
+      tensor code = landuseList[codei];
+      Info << code.xx() << "\t"<< code.xy() << "\t" << code.xz()
+	   << "\t" << code.yx() << "\t" << code.yy() << "\t" << code.yz()
+	   << "\t" << code.zx() << endl;
+    }
+
+  if (readFromRaster)
+    {
+      forAll(sourcePatches, sp)
 	{
-	  label patchI=mesh.boundaryMesh().findPatchID(sourcePatches[sp]);
+	  label patchI = mesh.boundaryMesh().findPatchID(sourcePatches[sp]);
 	  if (patchI == -1)
 	    FatalErrorIn(args.executable())
 	      << "Cannot find patch "<< sourcePatches[sp] << exit(FatalError);
 	  else
-	    Info<< "Found source patch "<< sourcePatches[sp]
-		<<" at patch with index " << patchI << endl;
+	    Info<< "Found source patch " << sourcePatches[sp]
+		<< " at patch with index " << patchI << endl;
 	}
-      
-      setLanduse(0,sourcePatches,landuse,LAD, nut, heightDistribution,landuseList,lu,dataSource);//a dummy value is given for patchLanduseCode 
+
+      //a dummy value is given for patchLanduseCode
+      setLanduse(0, sourcePatches, landuse, LAD, nut,
+		 heightDistribution, landuseList, lu,
+		 readFromRaster);
     }
   else
     {
       wordList currSourcePatches(1);
       forAll(sourcePatches,sp)
 	{
-	  label patchI=mesh.boundaryMesh().findPatchID(sourcePatches[sp]);
+	  label patchI = mesh.boundaryMesh().findPatchID(sourcePatches[sp]);
 	  if (patchI == -1)
 	    FatalErrorIn(args.executable())
-	      << "Cannot find patch "<< sourcePatches[sp] << exit(FatalError);
+	      << "Cannot find patch " << sourcePatches[sp] << exit(FatalError);
 	  else
-	    Info<< "Found source patch "<< sourcePatches[sp]
-		<<" at patch with index " << patchI << endl;
-	  currSourcePatches[0]=sourcePatches[sp];
-	  Info<<"Running setLanduse function"<<endl;
-	  setLanduse(patchLanduse[sp],currSourcePatches,landuse,LAD, nut, heightDistribution,landuseList,lu,dataSource);
+	    Info<< "Found source patch " << sourcePatches[sp]
+		<< " at patch with index " << patchI << endl;
+	  currSourcePatches[0] = sourcePatches[sp];
+	  Info << "Running setLanduse function" << endl;
+	  setLanduse(patchLanduse[sp], currSourcePatches,
+		     landuse,LAD, nut, heightDistribution,
+		     landuseList, lu,readFromRaster);
 	}
     }
-  
+
     landuse.write();
     LAD.write();
     nut.write();
