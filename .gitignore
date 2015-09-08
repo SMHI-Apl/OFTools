@@ -84,4 +84,7 @@ doc/Doxygen/DTAGS
 # Ignore the test directory
 /tutorialsTest
 
+#ignore third-party stuff
+utilities/mesh/generation/cf-mesh
+
 # end-of-file
