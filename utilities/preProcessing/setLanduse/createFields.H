@@ -28,7 +28,7 @@
 	dimensionedScalar("nut",dimensionSet (0,2,-1,0,0,0,0),0)
     );
 
-    Info<< "Creating field LAI\n" << endl;
+    Info<< "Creating field LAD\n" << endl;
     volScalarField LAD
     (
         IOobject

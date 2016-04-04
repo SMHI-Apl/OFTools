@@ -199,18 +199,20 @@ void setLanduse(label landuseCode, wordList sourcePatches,
   labelHashSet patchIDs(sourcePatches.size());
   forAll(sourcePatches,sp)
     {
+        //      Info<< "Processing patch1 " << sourcePatches[sp] << endl;
       label patchI=mesh.boundaryMesh().findPatchID(sourcePatches[sp]);
       patchIDs.insert(patchI);
-
       const polyPatch& pp = mesh.boundaryMesh()[patchI];
-
       forAll(landuse_.boundaryField()[patchI],facei)
 	{
+          Info<< "Face " << facei << endl;
 	  scalar x=pp.faceCentres()[facei].x();
 	  scalar y=pp.faceCentres()[facei].y();
 
 	  if(readFromRaster)
-	    landuseCode=label(lu.getValue(double(x),double(y)));
+              landuseCode=label(lu.getValue(double(x),double(y)));
+              
+          //Info<< "Set lu code " << scalar(landuseCode) << " in (x,y) = (" << x << ','  << y << ")" << endl;
 	  landuse_.boundaryField()[patchI][facei]=scalar(landuseCode);
 	}
 
@@ -220,6 +222,7 @@ void setLanduse(label landuseCode, wordList sourcePatches,
       forAll(landuse_.boundaryField()[patchI],facei)
 	{
 	  z0[facei] = landuse_.boundaryField()[patchI][facei];
+          //Info<< "Set z0=" << z0 << endl;
 	}
 
     }
