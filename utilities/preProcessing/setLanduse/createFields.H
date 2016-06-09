@@ -28,7 +28,7 @@
 	dimensionedScalar("nut",dimensionSet (0,2,-1,0,0,0,0),0)
     );
 
-    Info<< "Creating field LAI\n" << endl;
+    Info<< "Creating field LAD\n" << endl;
     volScalarField LAD
     (
         IOobject
@@ -41,6 +41,21 @@
         ),
         mesh,
 	dimensionedScalar("LAD",dimensionSet (0,-1,0,0,0,0,0),0)
+    );
+
+    Info<< "Creating field LAD\n" << endl;
+    volScalarField z0
+    (
+        IOobject
+        (
+            "z0",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh,
+	dimensionedScalar("z0",dimensionSet (0,1,0,0,0,0,0),0)
     );
 
     // Info<< "Reading boundaryfield U\n" << endl;

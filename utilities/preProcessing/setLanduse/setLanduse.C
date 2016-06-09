@@ -191,38 +191,14 @@ scalar getMaxLAD(scalarList dist,scalar h,scalar LAI)
 
 void setLanduse(label landuseCode, wordList sourcePatches,
 		volScalarField &landuse_, volScalarField &LAD_,
-		volScalarField &nut_, scalarList heightDist,
+                volScalarField &z0_, volScalarField &nut_,
+                scalarList heightDist,
 		List<tensor> &landuseList, Raster &lu,
 		Switch readFromRaster)
 {
   const fvMesh & mesh=landuse_.mesh();
   labelHashSet patchIDs(sourcePatches.size());
-  forAll(sourcePatches,sp)
-    {
-      label patchI=mesh.boundaryMesh().findPatchID(sourcePatches[sp]);
-      patchIDs.insert(patchI);
 
-      const polyPatch& pp = mesh.boundaryMesh()[patchI];
-
-      forAll(landuse_.boundaryField()[patchI],facei)
-	{
-	  scalar x=pp.faceCentres()[facei].x();
-	  scalar y=pp.faceCentres()[facei].y();
-
-	  if(readFromRaster)
-	    landuseCode=label(lu.getValue(double(x),double(y)));
-	  landuse_.boundaryField()[patchI][facei]=scalar(landuseCode);
-	}
-
-      Foam::incompressible::nutkAtmRoughWallFunctionFvPatchScalarField& wallNut =
-	refCast<Foam::incompressible::nutkAtmRoughWallFunctionFvPatchScalarField>(nut_.boundaryField()[patchI]);
-      scalarField& z0 = wallNut.z0();
-      forAll(landuse_.boundaryField()[patchI],facei)
-	{
-	  z0[facei] = landuse_.boundaryField()[patchI][facei];
-	}
-
-    }
   // Create a mapping beween lu-code and index in tensorList
   // labelList indexMap(maxCode(landuseList));
   // mapCodeIndices(landuseList, indexMap);
@@ -231,6 +207,48 @@ void setLanduse(label landuseCode, wordList sourcePatches,
   forAll(landuseList,codei)
     {
       indexMap.insert(label(landuseList[codei].xx()),codei);
+    }
+  
+  forAll(sourcePatches,sp)
+    {
+        //      Info<< "Processing patch1 " << sourcePatches[sp] << endl;
+      label patchI=mesh.boundaryMesh().findPatchID(sourcePatches[sp]);
+      patchIDs.insert(patchI);
+      const polyPatch& pp = mesh.boundaryMesh()[patchI];
+      forAll(landuse_.boundaryField()[patchI],facei)
+	{
+          
+	  scalar x=pp.faceCentres()[facei].x();
+	  scalar y=pp.faceCentres()[facei].y();
+
+	  if(readFromRaster)
+              landuseCode=label(lu.getValue(double(x),double(y)));
+              
+          //Info<< "Set lu code " << scalar(landuseCode) << " in (x,y) = (" << x << ','  << y << ")" << endl;
+	  landuse_.boundaryField()[patchI][facei]=scalar(landuseCode);
+	}
+
+      forAll(z0_.boundaryField()[patchI],facei)
+        {
+              
+          //Info<< "Set lu code " << scalar(landuseCode) << " in (x,y) = (" << x << ','  << y << ")" << endl;
+          scalar landuseCode = landuse_.boundaryField()[patchI][facei];
+          tensor landuse_parameters = landuseList[indexMap[landuseCode]];
+          z0_.boundaryField()[patchI][facei] = landuse_parameters.yy();; 
+        }
+
+      Foam::incompressible::nutkAtmRoughWallFunctionFvPatchScalarField& wallNut =
+	refCast<Foam::incompressible::nutkAtmRoughWallFunctionFvPatchScalarField>(nut_.boundaryField()[patchI]);
+      scalarField& z0 = wallNut.z0();
+
+      forAll(landuse_.boundaryField()[patchI],facei)
+	{
+          scalar landuseCode = landuse_.boundaryField()[patchI][facei];
+          tensor landuse_parameters = landuseList[indexMap[landuseCode]];
+          z0[facei] =  landuse_parameters.yy();
+          landuse_.boundaryField()[patchI][facei];
+	}
+
     }
 
   volScalarField d
@@ -253,7 +271,7 @@ void setLanduse(label landuseCode, wordList sourcePatches,
     {
       scalar x=mesh.C()[celli].x();
       scalar y=mesh.C()[celli].y();
-      scalar z=mesh.C()[celli].z();
+      // scalar z=mesh.C()[celli].z();
 
       if(readFromRaster)
 	landuseCode=label(lu.getValue(double(x),double(y)));
@@ -323,12 +341,21 @@ int main(int argc, char *argv[])
 
   //Initializing the landuse internalField and values on wall patches
   landuse.internalField() = -1;
+  z0.internalField() = -1;
   const fvPatchList& patches = mesh.boundary();
+
   forAll(patches,patchI)
     {
       const fvPatch& curPatch = patches[patchI];
       if(isType<wallFvPatch>(curPatch))
 	landuse.boundaryField()[patchI]=-1;
+    }
+
+    forAll(patches,patchI)
+    {
+      const fvPatch& curPatch = patches[patchI];
+      if(isType<wallFvPatch>(curPatch))
+	z0.boundaryField()[patchI]=-1;
     }
 
   forAll(landuseList,codei)
@@ -366,8 +393,8 @@ int main(int argc, char *argv[])
 	}
 
       //a dummy value is given for patchLanduseCode
-      setLanduse(0, sourcePatches, landuse, LAD, nut,
-		 heightDistribution, landuseList, lu,
+      setLanduse(0, sourcePatches, landuse, LAD, z0,
+                 nut, heightDistribution, landuseList, lu,
 		 readFromRaster);
     }
   else
@@ -385,14 +412,15 @@ int main(int argc, char *argv[])
 	  currSourcePatches[0] = sourcePatches[sp];
 	  Info << "Running setLanduse function" << endl;
 	  setLanduse(patchLanduse[sp], currSourcePatches,
-		     landuse,LAD, nut, heightDistribution,
-		     landuseList, lu,readFromRaster);
+            landuse,LAD, z0, nut, heightDistribution,
+            landuseList, lu,readFromRaster);
 	}
     }
 
     landuse.write();
     LAD.write();
     nut.write();
+    z0.write();
   Info<< "setLanduse finished successfully\n" << endl;
   return(0);
 }
