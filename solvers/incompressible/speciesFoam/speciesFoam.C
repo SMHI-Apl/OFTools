@@ -68,6 +68,7 @@ int main(int argc, char *argv[])
     Info<< "\nStarting time loop\n" << endl;
 
     //phi = fvc::interpolate(U) & mesh.Sf();
+
     while (simple.loop())
     {
         Info<< "Time = " << runTime.timeName() << nl << endl;
