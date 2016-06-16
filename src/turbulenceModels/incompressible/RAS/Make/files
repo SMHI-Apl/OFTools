@@ -1,4 +1,5 @@
 kEpsilon_canopy/kEpsilon_canopy.C
+kEpsilon_canopy_veh/kEpsilon_canopy_veh.C
 
 LIB = $(FOAM_USER_LIBBIN)/libmyIncompressibleRASModels
 
