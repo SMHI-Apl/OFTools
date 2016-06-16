@@ -16,9 +16,10 @@ public:
 	int nWdirs,nWspeeds,nConcNames;
 	std::vector<ScalarFoamFile> fileVec;
 	std::vector<double> wdirs,wspeeds,concs;
-	std::vector<std::string> concNames;	
+	std::vector<std::string> concNames;
+	std::vector<std::string> fileNames;
 	
-	ConcFileArchive(std::vector<std::string> fileNames);
+	ConcFileArchive(std::vector<std::string> inFileNames);
 	~ConcFileArchive();
 		
 	int nextCellValue();

@@ -1,12 +1,12 @@
 #include "ConcFileArchive.H"
 
-ConcFileArchive::ConcFileArchive(std::vector<std::string> fileNames)
+ConcFileArchive::ConcFileArchive(std::vector<std::string> inFileNames)
 {
 	std::vector<std::string>::iterator fn,pp;
 	std::vector<std::string> allConcNames;
 	std::vector<double> allWdirs, allWspeeds;
 	std::string pathRoot, dirNamePart, fileNamePart;
-	for(fn=fileNames.begin();fn!=fileNames.end();fn++)
+	for(fn=inFileNames.begin();fn!=inFileNames.end();fn++)
 	{
 	  
 	  pathRoot="";
@@ -66,9 +66,10 @@ ConcFileArchive::ConcFileArchive(std::vector<std::string> fileNames)
 				fnStream<<"/"<<concNames[concInd];
 				std::string fileName;
 				fnStream >> fileName;
-				ScalarFoamFile foamFile(fileName);
-				fileVec.push_back(foamFile);
+				// ScalarFoamFile foamFile(fileName);
+				// fileVec.push_back(foamFile);
 				concs.push_back(-9999.0);
+				fileNames.push_back(fileName);
 			}
 		}
 	}
@@ -77,6 +78,7 @@ ConcFileArchive::ConcFileArchive(std::vector<std::string> fileNames)
 ConcFileArchive::~ConcFileArchive()
 {
 }
+
 
 int ConcFileArchive::nextCellValue()
 {
