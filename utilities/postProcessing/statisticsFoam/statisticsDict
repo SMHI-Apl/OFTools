@@ -1,0 +1,88 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.6                                   |
+|   \\  /    A nd           | Web:      http://www.OpenFOAM.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      statisticsDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// write statistics as 3D-fields
+write3DFields yes;
+
+// Read background concentrations from file and add to result before calculating statics
+// If NO2 conversion is not used, the first time-series in the file is used
+backgroundSwitch no;
+
+
+/*
+Convert NOx to NO2 using OSPM-scheme
+requires met-data:
+  temp: temp at 2m [deg C]
+  glob: global rad. [W/m2]
+requires background conc:
+  NOx_b: background NOx concentration [microg/m3]
+  NO2_b: background NO2 concentration [microg/m3]
+  O3_b: background O3 concentration [microg/m3]
+*/
+NO2_conversionSwitch yes;
+
+
+// met-data in format YY MM DD HH wdir wspeed sigmawdir [temp] [glob]
+metFile         "/home/openfoam/projekt/slussenAir/constant/meteorologi_formaterad.txt";
+
+// emission time-series for each source group given in trafficDict
+emisFile        "/home/openfoam/projekt/slussenAir/constant/emissioner_mgpers_tot.txt";
+
+// background time-series for each source group given in trafficDict
+backgroundFile  "<none>";
+
+// File with extracted time-series
+probeFile       "/home/openfoam/projekt/slussenAir/extractedTimeSeries_tot_PM10.txt";
+
+// directory with concentration fields to use in calculations
+concFileDir     "/home/openfoam/projekt/slussenAir/concArchive";
+
+// List of paths to files used in the calculation
+concFileList
+(
+"/home/openfoam/projekt/slussenAir/concArchive/wspeed_0.5_wdir_0.0/spec_LDVPM10"
+"/home/openfoam/projekt/slussenAir/concArchive/wspeed_0.5_wdir_45.0/spec_LDVPM10"
+);
+
+hourlyPercentile 0;
+
+dailyMaxPercentile 0;
+
+dailyAveragePercentile 90;
+
+nValidsForDaily 18;
+
+maxAllowedConc  100000000000;
+
+probeLocations  
+(
+ (931 730 6)
+ (618 848 16)
+ (438 933 6)
+ (382 951 9.5)
+);
+
+probeNames      
+(
+mynning_E
+hornsgatan_vid_skeppsbron
+mynning_W
+centralbron
+);
+
+
+// ************************************************************************* //
