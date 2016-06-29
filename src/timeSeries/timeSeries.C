@@ -21,7 +21,12 @@ timeSeries::~timeSeries()
 
 std::ostream &operator<<(std::ostream &output, timeSeries &inTs)
 {
-	output<<"year\tmonth\tday\thour\t";
+    if(int(inTs.header.size()) < inTs.ncols) {
+            std::cout<<"Error: invalid header in timeseries"<<"\n";
+            exit(1);
+        }
+    
+	output<<"year\tmonth\tday\thour\t";        
 	std::vector<std::string>::iterator headerIter;
 	for(headerIter=inTs.header.begin();
 		headerIter!= inTs.header.end()-1;
@@ -62,8 +67,9 @@ timeSeries::timeSeries(std::string fileName)
 	ncols=header.size();
 	
 	char dataRow[200];
+        char empty_row[] = "\n";
 	istr.getline(dataRow,200);
-	while(not istr.eof() && dataRow!="\n")
+	while(not istr.eof() && dataRow !=empty_row)
 	{				
 			std::string rowStr(dataRow);
 			std::stringstream rowStream(rowStr);
@@ -154,7 +160,7 @@ double timeSeries::percentile(double perc)
 		row++;
 	highVal=(*row).data[(*row).currentCol];
 	if(highVal!=lowVal)
-		return (lowVal+rest/(highVal-lowVal));
+		return (lowVal+rest*(highVal-lowVal));
 	else
 		return lowVal;
 }

@@ -6,6 +6,7 @@
 #include <string>
 #include <sstream>
 #include <fstream>
+#include <iostream>
 #include <cstdlib>
 #include "tsRow.H"
 
