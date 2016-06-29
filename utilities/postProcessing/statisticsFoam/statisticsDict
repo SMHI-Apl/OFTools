@@ -20,7 +20,7 @@ write3DFields yes;
 
 // Read background concentrations from file and add to result before calculating statics
 // If NO2 conversion is not used, the first time-series in the file is used
-backgroundSwitch no;
+backgroundSwitch yes;
 
 
 /*
@@ -37,32 +37,192 @@ NO2_conversionSwitch yes;
 
 
 // met-data in format YY MM DD HH wdir wspeed sigmawdir [temp] [glob]
-metFile         "/home/openfoam/projekt/slussenAir/constant/meteorologi_formaterad.txt";
+metFile         "/nobackup/smhid10/sm_davse/jarnvagen/jarnvagen_stat/constant/Meteorological_data_Lejonet_FOR_CALC.txt";
 
 // emission time-series for each source group given in trafficDict
-emisFile        "/home/openfoam/projekt/slussenAir/constant/emissioner_mgpers_tot.txt";
+emisFile        "/nobackup/smhid10/sm_davse/jarnvagen/jarnvagen_stat/constant/emissionTimeSeries_mg_per_s.csv";
 
 // background time-series for each source group given in trafficDict
-backgroundFile  "<none>";
+backgroundFile  "/nobackup/smhid10/sm_davse/jarnvagen/jarnvagen_stat/constant/Background_data_Femman_FOR_CALC.txt";
 
 // File with extracted time-series
-probeFile       "/home/openfoam/projekt/slussenAir/extractedTimeSeries_tot_PM10.txt";
+probeDir       "/nobackup/smhid10/sm_davse/jarnvagen/jarnvagen_stat/probes";
 
 // directory with concentration fields to use in calculations
-concFileDir     "/home/openfoam/projekt/slussenAir/concArchive";
+concFileDir     "/nobackup/smhid10/sm_davse/jarnvagen/concArchive";
 
 // List of paths to files used in the calculation
 concFileList
 (
-"/home/openfoam/projekt/slussenAir/concArchive/wspeed_0.5_wdir_0.0/spec_LDVPM10"
-"/home/openfoam/projekt/slussenAir/concArchive/wspeed_0.5_wdir_45.0/spec_LDVPM10"
+"/wspeed_1.0_wdir_0.0/spec_HDV"
+"/wspeed_1.0_wdir_0.0/spec_Tunnels"
+"/wspeed_1.0_wdir_0.0/spec_LDV"
+"/wspeed_1.0_wdir_20.0/spec_LDV"
+"/wspeed_1.0_wdir_20.0/spec_Tunnels"
+"/wspeed_1.0_wdir_20.0/spec_HDV"
+"/wspeed_1.0_wdir_40.0/spec_LDV"
+"/wspeed_1.0_wdir_40.0/spec_Tunnels"
+"/wspeed_1.0_wdir_40.0/spec_HDV"
+"/wspeed_1.0_wdir_60.0/spec_Tunnels"
+"/wspeed_1.0_wdir_60.0/spec_HDV"
+"/wspeed_1.0_wdir_60.0/spec_LDV"
+"/wspeed_1.0_wdir_80.0/spec_LDV"
+"/wspeed_1.0_wdir_80.0/spec_Tunnels"
+"/wspeed_1.0_wdir_80.0/spec_HDV"
+"/wspeed_1.0_wdir_100.0/spec_LDV"
+"/wspeed_1.0_wdir_100.0/spec_Tunnels"
+"/wspeed_1.0_wdir_100.0/spec_HDV"
+"/wspeed_1.0_wdir_120.0/spec_HDV"
+"/wspeed_1.0_wdir_120.0/spec_Tunnels"
+"/wspeed_1.0_wdir_120.0/spec_LDV"
+"/wspeed_1.0_wdir_140.0/spec_HDV"
+"/wspeed_1.0_wdir_140.0/spec_Tunnels"
+"/wspeed_1.0_wdir_140.0/spec_LDV"
+"/wspeed_1.0_wdir_160.0/spec_Tunnels"
+"/wspeed_1.0_wdir_160.0/spec_LDV"
+"/wspeed_1.0_wdir_160.0/spec_HDV"
+"/wspeed_1.0_wdir_180.0/spec_LDV"
+"/wspeed_1.0_wdir_180.0/spec_Tunnels"
+"/wspeed_1.0_wdir_180.0/spec_HDV"
+"/wspeed_1.0_wdir_200.0/spec_HDV"
+"/wspeed_1.0_wdir_200.0/spec_LDV"
+"/wspeed_1.0_wdir_200.0/spec_Tunnels"
+"/wspeed_1.0_wdir_220.0/spec_Tunnels"
+"/wspeed_1.0_wdir_220.0/spec_LDV"
+"/wspeed_1.0_wdir_220.0/spec_HDV"
+"/wspeed_1.0_wdir_240.0/spec_Tunnels"
+"/wspeed_1.0_wdir_240.0/spec_LDV"
+"/wspeed_1.0_wdir_240.0/spec_HDV"
+"/wspeed_1.0_wdir_260.0/spec_LDV"
+"/wspeed_1.0_wdir_260.0/spec_Tunnels"
+"/wspeed_1.0_wdir_260.0/spec_HDV"
+"/wspeed_1.0_wdir_280.0/spec_LDV"
+"/wspeed_1.0_wdir_280.0/spec_Tunnels"
+"/wspeed_1.0_wdir_280.0/spec_HDV"
+"/wspeed_1.0_wdir_300.0/spec_LDV"
+"/wspeed_1.0_wdir_300.0/spec_Tunnels"
+"/wspeed_1.0_wdir_300.0/spec_HDV"
+"/wspeed_1.0_wdir_320.0/spec_HDV"
+"/wspeed_1.0_wdir_320.0/spec_Tunnels"
+"/wspeed_1.0_wdir_320.0/spec_LDV"
+"/wspeed_1.0_wdir_340.0/spec_Tunnels"
+"/wspeed_1.0_wdir_340.0/spec_HDV"
+"/wspeed_1.0_wdir_340.0/spec_LDV"
+"/wspeed_3.0_wdir_0.0/spec_Tunnels"
+"/wspeed_3.0_wdir_0.0/spec_LDV"
+"/wspeed_3.0_wdir_0.0/spec_HDV"
+"/wspeed_3.0_wdir_20.0/spec_HDV"
+"/wspeed_3.0_wdir_20.0/spec_LDV"
+"/wspeed_3.0_wdir_20.0/spec_Tunnels"
+"/wspeed_3.0_wdir_40.0/spec_LDV"
+"/wspeed_3.0_wdir_40.0/spec_Tunnels"
+"/wspeed_3.0_wdir_40.0/spec_HDV"
+"/wspeed_3.0_wdir_60.0/spec_HDV"
+"/wspeed_3.0_wdir_60.0/spec_Tunnels"
+"/wspeed_3.0_wdir_60.0/spec_LDV"
+"/wspeed_3.0_wdir_80.0/spec_LDV"
+"/wspeed_3.0_wdir_80.0/spec_HDV"
+"/wspeed_3.0_wdir_80.0/spec_Tunnels"
+"/wspeed_3.0_wdir_100.0/spec_Tunnels"
+"/wspeed_3.0_wdir_100.0/spec_LDV"
+"/wspeed_3.0_wdir_100.0/spec_HDV"
+"/wspeed_3.0_wdir_120.0/spec_HDV"
+"/wspeed_3.0_wdir_120.0/spec_LDV"
+"/wspeed_3.0_wdir_120.0/spec_Tunnels"
+"/wspeed_3.0_wdir_140.0/spec_HDV"
+"/wspeed_3.0_wdir_140.0/spec_LDV"
+"/wspeed_3.0_wdir_140.0/spec_Tunnels"
+"/wspeed_3.0_wdir_160.0/spec_Tunnels"
+"/wspeed_3.0_wdir_160.0/spec_LDV"
+"/wspeed_3.0_wdir_160.0/spec_HDV"
+"/wspeed_3.0_wdir_180.0/spec_HDV"
+"/wspeed_3.0_wdir_180.0/spec_LDV"
+"/wspeed_3.0_wdir_180.0/spec_Tunnels"
+"/wspeed_3.0_wdir_200.0/spec_HDV"
+"/wspeed_3.0_wdir_200.0/spec_LDV"
+"/wspeed_3.0_wdir_200.0/spec_Tunnels"
+"/wspeed_3.0_wdir_220.0/spec_Tunnels"
+"/wspeed_3.0_wdir_220.0/spec_LDV"
+"/wspeed_3.0_wdir_220.0/spec_HDV"
+"/wspeed_3.0_wdir_240.0/spec_LDV"
+"/wspeed_3.0_wdir_240.0/spec_Tunnels"
+"/wspeed_3.0_wdir_240.0/spec_HDV"
+"/wspeed_3.0_wdir_260.0/spec_HDV"
+"/wspeed_3.0_wdir_260.0/spec_LDV"
+"/wspeed_3.0_wdir_260.0/spec_Tunnels"
+"/wspeed_3.0_wdir_280.0/spec_Tunnels"
+"/wspeed_3.0_wdir_280.0/spec_HDV"
+"/wspeed_3.0_wdir_280.0/spec_LDV"
+"/wspeed_3.0_wdir_300.0/spec_LDV"
+"/wspeed_3.0_wdir_300.0/spec_Tunnels"
+"/wspeed_3.0_wdir_300.0/spec_HDV"
+"/wspeed_3.0_wdir_320.0/spec_LDV"
+"/wspeed_3.0_wdir_320.0/spec_Tunnels"
+"/wspeed_3.0_wdir_320.0/spec_HDV"
+"/wspeed_3.0_wdir_340.0/spec_HDV"
+"/wspeed_3.0_wdir_340.0/spec_Tunnels"
+"/wspeed_3.0_wdir_340.0/spec_LDV"
+"/wspeed_8.0_wdir_0.0/spec_Tunnels"
+"/wspeed_8.0_wdir_0.0/spec_LDV"
+"/wspeed_8.0_wdir_0.0/spec_HDV"
+"/wspeed_8.0_wdir_20.0/spec_LDV"
+"/wspeed_8.0_wdir_20.0/spec_HDV"
+"/wspeed_8.0_wdir_20.0/spec_Tunnels"
+"/wspeed_8.0_wdir_40.0/spec_HDV"
+"/wspeed_8.0_wdir_40.0/spec_Tunnels"
+"/wspeed_8.0_wdir_40.0/spec_LDV"
+"/wspeed_8.0_wdir_60.0/spec_HDV"
+"/wspeed_8.0_wdir_60.0/spec_Tunnels"
+"/wspeed_8.0_wdir_60.0/spec_LDV"
+"/wspeed_8.0_wdir_80.0/spec_Tunnels"
+"/wspeed_8.0_wdir_80.0/spec_HDV"
+"/wspeed_8.0_wdir_80.0/spec_LDV"
+"/wspeed_8.0_wdir_100.0/spec_Tunnels"
+"/wspeed_8.0_wdir_100.0/spec_LDV"
+"/wspeed_8.0_wdir_100.0/spec_HDV"
+"/wspeed_8.0_wdir_120.0/spec_HDV"
+"/wspeed_8.0_wdir_120.0/spec_LDV"
+"/wspeed_8.0_wdir_120.0/spec_Tunnels"
+"/wspeed_8.0_wdir_140.0/spec_HDV"
+"/wspeed_8.0_wdir_140.0/spec_LDV"
+"/wspeed_8.0_wdir_140.0/spec_Tunnels"
+"/wspeed_8.0_wdir_160.0/spec_Tunnels"
+"/wspeed_8.0_wdir_160.0/spec_LDV"
+"/wspeed_8.0_wdir_160.0/spec_HDV"
+"/wspeed_8.0_wdir_180.0/spec_HDV"
+"/wspeed_8.0_wdir_180.0/spec_LDV"
+"/wspeed_8.0_wdir_180.0/spec_Tunnels"
+"/wspeed_8.0_wdir_200.0/spec_HDV"
+"/wspeed_8.0_wdir_200.0/spec_LDV"
+"/wspeed_8.0_wdir_200.0/spec_Tunnels"
+"/wspeed_8.0_wdir_220.0/spec_Tunnels"
+"/wspeed_8.0_wdir_220.0/spec_LDV"
+"/wspeed_8.0_wdir_220.0/spec_HDV"
+"/wspeed_8.0_wdir_240.0/spec_LDV"
+"/wspeed_8.0_wdir_240.0/spec_Tunnels"
+"/wspeed_8.0_wdir_240.0/spec_HDV"
+"/wspeed_8.0_wdir_260.0/spec_HDV"
+"/wspeed_8.0_wdir_260.0/spec_LDV"
+"/wspeed_8.0_wdir_260.0/spec_Tunnels"
+"/wspeed_8.0_wdir_280.0/spec_Tunnels"
+"/wspeed_8.0_wdir_280.0/spec_HDV"
+"/wspeed_8.0_wdir_280.0/spec_LDV"
+"/wspeed_8.0_wdir_300.0/spec_LDV"
+"/wspeed_8.0_wdir_300.0/spec_Tunnels"
+"/wspeed_8.0_wdir_300.0/spec_HDV"
+"/wspeed_8.0_wdir_320.0/spec_LDV"
+"/wspeed_8.0_wdir_320.0/spec_Tunnels"
+"/wspeed_8.0_wdir_320.0/spec_HDV"
+"/wspeed_8.0_wdir_340.0/spec_HDV"
+"/wspeed_8.0_wdir_340.0/spec_Tunnels"
+"/wspeed_8.0_wdir_340.0/spec_LDV"
 );
 
-hourlyPercentile 0;
+hourlyPercentile 98;
 
 dailyMaxPercentile 0;
 
-dailyAveragePercentile 90;
+dailyAveragePercentile 98;
 
 nValidsForDaily 18;
 
@@ -70,18 +230,24 @@ maxAllowedConc  100000000000;
 
 probeLocations  
 (
- (931 730 6)
- (618 848 16)
- (438 933 6)
- (382 951 9.5)
+ (152 -22 4.2)
+ (-81 -53 4.2)
+ (-271 -83 4.0)
+ (-50 11 6.2)
+ (131 28 5.21)
+ (-361 -26 6.0)
+ (457.51 147.93 4.59)
 );
 
 probeNames      
 (
-mynning_E
-hornsgatan_vid_skeppsbron
-mynning_W
-centralbron
+kv_soder_om_oscarsleden_east
+kv_soder_om_oscarsleden_middle
+kv_soder_om_oscarsleden_west
+roadside_soder_om_oscarsleden_middle
+gotatunnelns_vastra_mynning
+roadside_soder_om_oscarsleden_west
+debug
 );
 
 
