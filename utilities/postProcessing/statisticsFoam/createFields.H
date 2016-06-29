@@ -25,26 +25,34 @@ if(dailyMaxPercentile>0 and dailyMaxPercentile <100)
 label nConcFields = ca.fileNames.size();
 PtrList<volScalarField> concFields(nConcFields);
 if (args.parRunControl().parRun()) {
-  for(label concFieldInd=0; concFieldInd < nConcFields; concFieldInd++) {
-    word concFieldTitle(ca.fileNames[concFieldInd]);
-    concFields.set(
-      concFieldInd,
-      new volScalarField
-      (
-       IOobject
-       (
-	concFieldTitle,
-	runTime.timeName(),
-	mesh,
-	IOobject::MUST_READ,
-	IOobject::NO_WRITE
-	),
-       mesh
-       )
-    );
-  }
+    Info<<"Parallel run, reading all concentration fields"<<endl;
+    for(label concFieldInd=0; concFieldInd < nConcFields; concFieldInd++) {
+        fileName fieldFilePath(ca.fileNames[concFieldInd]);
+        fileName archiveDirPath = fieldFilePath.path();
+        fileName fieldFileName = fieldFilePath.name();
+        OStringStream concFieldTitleStream;
+        concFieldTitleStream << word(fieldFileName) << "_" << archiveDirPath.name();
+        word concFieldTitle(concFieldTitleStream.str());
+        Info<<"Reading field " << concFieldTitle.c_str()<<endl;
+        
+        concFields.set(
+            concFieldInd,
+            new volScalarField
+            (
+                IOobject
+                (
+                    concFieldTitle,
+                    runTime.timeName(),
+                    mesh,
+                    IOobject::MUST_READ,
+                    IOobject::NO_WRITE
+                ),
+                mesh
+            )
+        );
+    }
 }
-  
+
 
 PtrList<volScalarField> statFields(nStatFields);
 label statFieldInd=0;

@@ -1,4 +1,7 @@
-  ConcFileArchive ca(concFileNames);  
+  for(int i=0;i<int(concFileNames.size()); i++)
+      Info<<concFileNames[i]<<endl;
+
+  ConcFileArchive ca(concFileNames);
   timeSeries metTS(metFile.c_str());
   timeSeries emisTS(emisFile.c_str());    
   timeSeries bgTS;
@@ -50,42 +53,41 @@
   timeSeries weightTS;
   std::vector<ScalarFoamFile>::iterator fid;
   for(fid=ca.fileVec.begin();fid!=ca.fileVec.end();fid++)
-    weightTS.header.push_back((*fid).fileName);
-  
+      weightTS.header.push_back((*fid).fileName);
+
+  Info<<"Included "<<int(ca.fileVec.size())<<" files from concArchive"<<endl;
+  if(ca.fileVec.size() == 0) {
+      FatalErrorIn(args.executable())
+          << "No conc files included "
+          << "(check format of file list in statisticsDict)"         
+          << exit(FatalError);
+  }
   //Finding probe cells and creating time series for probe points  
   //Creating an empty probe time series row to initialize the probe time series with 
-  tsRow probeRow(int(probeList.size()));
-  for(int i=0;i<probeRow.ncols;i++)
-    probeRow.data[i]=-9999.0;
+  tsRow probeRow(1);  
+  probeRow.data[0]=-9999.0;
 
   //creating an empty concentration time series row to initialize the conentration timeseries
   tsRow concRow(1);
   concRow.data[0]=-9999.0;
 
   //Creating a vector of probe cell labels and a probe time series, setting the time series headers to the probe names
-  timeSeries probeTS;
+  Info<<"Locating probe points in mesh"<<endl;
+  PtrList<timeSeries> probeTsList;
   std::vector<label> probeCells;  
   forAll(probeList,probe)
-    {
+  {
       label probeCellLabel;
       probeCellLabel = mesh.findCell(probeList[probe]);
-      if(probeCellLabel<0)
-	FatalErrorIn(args.executable())
-	  << "The probe named: "<<probeNames[probe]<<" is outside of mesh" << exit(FatalError);
-      probeCells.push_back(probeCellLabel);
-      Info<<"Found probe cell: "<< probeNames[probe]<<" at index: "<<probeCellLabel<<endl;
-      probeTS.header.push_back(std::string(probeNames[probe].c_str()));
-    }
-
-  std::ofstream probeFid;
-  if(int(probeCells.size()>0))
-    {
-      Info<<"probe file: "<<probeFile.c_str()<<endl;
-      probeFid.open(probeFile.c_str());
-      if(!probeFid.is_open())
-        FatalErrorIn(args.executable())
-          << "Could not open probe output file"<< exit(FatalError);
-    }
+      if(probeCellLabel >=0 ) {
+          probeCells.push_back(probeCellLabel);
+          std::cout <<"Found probe cell: "<< probeNames[probe]<<" at index: "<<probeCellLabel<<"\n";
+          probeTsList.append(new timeSeries());
+          (probeTsList.last()).header.push_back(std::string(probeNames[probe].c_str()));
+      }
+      //FatalErrorIn(args.executable())
+      //<< "The probe named: "<<probeNames[probe]<<" is outside of mesh" << exit(FatalError);
+  }
 
   //Creating a initialized concentration time series
   timeSeries concTS;
@@ -99,7 +101,10 @@
       probeRow.month=(*rowIter).month;
       probeRow.day=(*rowIter).day;
       probeRow.hour=(*rowIter).hour;
-      probeTS.appendRow(probeRow);
+      for(PtrList<timeSeries>::iterator probeIter=probeTsList.begin();
+          probeIter!=probeTsList.end();probeIter++) {
+          (*probeIter).appendRow(probeRow);
+      }
 
       concRow.year=(*rowIter).year;
       concRow.month=(*rowIter).month;
@@ -136,6 +141,7 @@
       FatalErrorIn(args.executable())
         << "Error: parameter sigmawdir not found in timeseries header"<< exit(FatalError);
     }
+  
   
 if (NO2_conversion)
   {
@@ -192,17 +198,25 @@ if(NO2_conversion)
   }
    
 
-
-
-  //Creating debug output file for weights
+  //Creating debug output file for weight
   std::ofstream weightFid;
-fileName weightFile=args.rootPath()+"/"+args.globalCaseName()+"/"+"weightDebugFile.txt";
-
+  fileName weightFile=args.rootPath()+"/"+args.globalCaseName()+"/"+"weightDebugFile.txt";
   Info<<"weight debug file: "<<weightFile.c_str()<<endl;
-  weightFid.open(weightFile.c_str());
-  if(!weightFid.is_open())
-    FatalErrorIn(args.executable())
-      << "Could not open weight debug file"<< exit(FatalError);
-
   timeSeries debugTS(weightTS);
 
+  //Creating quality control files
+  std::ofstream qcFid;
+  fileName qcFileName=args.rootPath()+"/"+args.globalCaseName()+"/"+"qualityControlFile.txt";  
+  Info<<"quality control file: "<<qcFileName.c_str()<<endl;
+
+  // Clear old output file that will be appeded by parallel writes
+  if( Pstream::master()) {
+      qcFid.open(qcFileName.c_str());
+      if(!qcFid.is_open())
+          FatalErrorIn(args.executable())
+              << "Could not open file " << qcFileName << "for writing"
+              << exit(FatalError);
+
+      qcFid<<"Quality assurance of calculations\n";
+      qcFid.close();
+   }

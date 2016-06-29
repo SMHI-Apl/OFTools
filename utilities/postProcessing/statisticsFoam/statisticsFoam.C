@@ -23,7 +23,7 @@
   Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
   Application
-  percentileFoam
+  statisticsFoam
 
   Description
 \*---------------------------------------------------------------------------*/
@@ -39,12 +39,33 @@
 #include <fstream>
 #include "PtrList.H"
 #include <iostream>
+
 // #include <cmath>
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 double STD_PRES = 101.325; // kPa
 double STD_TEMP = 273.15;  // Kelvin
 double MOL_VOL_AIR = 22.41400; // L/mol
+
+
+// const fileName getOutputDir() const
+// {
+//     // Create the output folder if it doesn't exist yet
+//     fileName outputDir;
+//     if (Pstream::parRun())
+//     {
+//         outputDir = mesh_.time().path()/".."/"debug";
+//     }
+//     else
+//     {
+//         outputDir = mesh_.time().path()/"debug";
+//     }
+//     if (!isDir(outputDir))
+//     {
+//         mkDir(outputDir);
+//     }
+//     return outputDir;
+// }
 
 scalar microg2ppb(scalar mol_weight, scalar temp=273.15, scalar pres=101.325)
 {
@@ -122,22 +143,40 @@ int main(int argc, char *argv[])
   //Loops over all hours, calculating a weight corresponding to the current meteorology and emissions
   //The weights are stored in a timeseries with one column per file in the ConcFileArchive 
   Info<<"Loops over all hours to calulate weights for dispersion cases"<<endl;
+  
   emisHour=emisTS.rows.begin();
+  Info<<"Nrows emis:"<<emisTS.nrows<<endl;
+  Info<<"Nrows met:"<<metTS.nrows<<endl;
+  
   for(hour=metTS.rows.begin();hour!=metTS.rows.end();hour++)
     {
       //Gets the vector with weights caused by the meteorology
       //(linear interpolation between windspeeds, gaussian wdir variation with std sigma during single hours)
-      std::vector<double> metWeights = ca.getConcMetWeights((*hour).data[wspeedInd],(*hour).data[wdirInd],(*hour).data[sigmaInd]);
+      std::vector<double> metWeights = ca.getConcMetWeights(
+          (*hour).data[wspeedInd],(*hour).data[wdirInd],(*hour).data[sigmaInd]
+      );
       std::vector<double> emisWeights(metWeights.size(),0);
       std::vector<double> concNameWeights;
       
-      //Iterates over all concNames in the ConcFileArchive
-      //gets a weight vector with a weight for each ConcFileArchive (weight=1 if the file refers to the current concName, otherwise 0)
-      //For each concName the emission is also extracted from the emission timeseries and multiplied with the weight vector to give an emission weight vector
-      //The resulting emission weights are summed over all concNames to get a complete emission weight vector
-      //Finally the emission weight vector is multiplied with the meteorological weight vector to give a complete weight vector
-      //The emission timeseries is presumed to be in units mg/s (a conversion is made to match the unit emission of 1 g/(s sourceGroup) on which the concentration fields are based)
-
+      /*
+          Iterates over all concNames in the ConcFileArchive.
+          
+          Gets a weight vector with a weight for each ConcFileArchive
+          (weight=1 if the file refers to the current concName, otherwise 0).
+          
+          For each concName the emission is also extracted from the emission
+          timeseries and multiplied with the weight vector to give an emission weight vector.
+          
+          The resulting emission weights are summed over all concNames
+          to get a complete emission weight vector
+          
+          Finally the emission weight vector is multiplied with the meteorological
+          weight vector to give a complete weight vector
+          
+          The emission timeseries is presumed to be in units mg/s 
+          (a conversion is made to match the unit emission of 1 g/(s sourceGroup)
+          on which the concentration fields are based)
+      */
       std::vector<std::string>::iterator concName;
       for(concName=ca.concNames.begin();concName!=ca.concNames.end();concName++)
         {
@@ -145,25 +184,45 @@ int main(int argc, char *argv[])
           int concNameInd=emisTS.getColInd(*concName);
           if(concNameInd==-1)
             {
-              Info<<"Error: parameter "<<*concName<<" not found in timeseries header"<<endl;
+              Info<<"Error: parameter "
+                  <<*concName
+                  <<" not found in timeseries header"
+                  <<endl;
+
               FatalErrorIn(args.executable())
-                << "Error: parameter "<< *concName<<" not found in timeseries header"<< exit(FatalError);
+                  << "Error: parameter "
+                  << *concName
+                  <<" not found in timeseries header"
+                  << exit(FatalError);
             }
-          emisWeights=add(emisWeights,multi(concNameWeights,(*emisHour).data[concNameInd]/1000.0));
+          emisWeights=add(
+              emisWeights,multi(concNameWeights,(*emisHour).data[concNameInd]/1000.0)
+          );
         }
-      tsRow hourWeights((*hour).year, (*hour).month, (*hour).day, (*hour).hour,multi(metWeights,emisWeights));  
+      tsRow hourWeights(
+          (*hour).year, (*hour).month, (*hour).day, (*hour).hour,
+          multi(metWeights,emisWeights)
+      );  
       weightTS.appendRow(hourWeights);
 
-      tsRow debugWeightRow((*hour).year, (*hour).month, (*hour).day, (*hour).hour,metWeights);
+      tsRow debugWeightRow(
+          (*hour).year, (*hour).month, (*hour).day, (*hour).hour,metWeights
+      );
       debugTS.appendRow(debugWeightRow);
+      // Info<<"emissions are: "<<emisHour->year<<"-"
+      // <<emisHour->month<<"-"<<emisHour->day<<" "<<emisHour->hour<<": "<<endl;
       emisHour++;
-      Info<<"emissions are: "<<emisHour->year<<"-"<<emisHour->month<<"-"<<emisHour->day<<" "<<emisHour->hour<<endl;
-
   }
-
-  weightFid<<debugTS;
-  weightFid.close();
-
+  Info<<"Calculated emission weights"<<endl;
+  if (Pstream::master())
+  {
+      weightFid.open(weightFile.c_str());
+      if(!weightFid.is_open())
+          FatalErrorIn(args.executable())
+              << "Could not open weight debug file"<< exit(FatalError);
+      weightFid<<debugTS;
+      weightFid.close();
+  }
   volScalarField& hourlyAvg=statFields[0];
   
   Info<<"Preprocessing of met-data and emissions ready!"<<endl;
@@ -174,17 +233,11 @@ int main(int argc, char *argv[])
   double typeConversionFactor=1.225*1.0e9;
 
 
-  //Creating quality control files
-  std::ofstream qcFid;
-  fileName qcFileName=args.rootPath()+"/"+args.globalCaseName()+"/"+"qualityControlFile.txt";
-  
-  Info<<"quality control file: "<<qcFileName.c_str()<<endl;
-  
-  qcFid.open(qcFileName.c_str());
+
+  qcFid.open(qcFileName.c_str(), ios_base::app);
   if(!qcFid.is_open())
-    FatalErrorIn(args.executable())
-      << "Could not open quality control file for max conc"<< exit(FatalError);
-  qcFid<<"Quality assurance of calculations\n";
+      FatalErrorIn(args.executable())
+          << "Could not open quality control file for max conc"<< exit(FatalError);
 
   //Initializing progress counters
   scalar cellCounter=1;
@@ -204,6 +257,7 @@ int main(int argc, char *argv[])
 	  Info<<" Done "<<int(doneProc2)<<" %"<<endl;
 	  doneProc1=doneProc2;
 	}
+      //Info<<" Done "<<doneProc2<<" %"<<endl;
 
       //Getting cell values from archived conc fields
       if(!args.parRunControl().parRun()) {
@@ -218,17 +272,18 @@ int main(int argc, char *argv[])
 
       //Checking if cell label match any of the probe cell labels
       int foundProbe=0;
-      int probeNr;
-      for(probeNr=0;probeNr<int(probeCells.size());probeNr++)
-	{
-	  if(probeCells[probeNr]==celli)
-	    {
-	      Info<<"Found probe cell, writing timeseries to extractedTimeseries.txt"<<endl;
+      int probeNr = 0;
+      PtrList<timeSeries>::iterator probeIter=probeTsList.begin();
+      for(;probeIter!=probeTsList.end();probeIter++) {
+          if(probeCells[probeNr]==celli)
+          {
+              std::cout<<"Found probe cell, writing timeseries to probes dir"<<"\n";
 	      foundProbe=1;
-	      probesDone++;
+	      probesDone++;              
 	      break;
-	    }
-	}
+          }
+          probeNr++;
+      }
 
       //Initializing average calculations
       double sumConc=0.0;
@@ -243,7 +298,7 @@ int main(int argc, char *argv[])
 	  metHour = metTS.rows.begin();
 
 	  if(foundProbe)
-	    probeHour=probeTS.rows.begin();
+              probeHour=(*probeIter).rows.begin();
 
 	  for(hour=weightTS.rows.begin();hour!=weightTS.rows.end();hour++)
 	    {
@@ -251,27 +306,33 @@ int main(int argc, char *argv[])
 	      //Checking that calculated concentration is not greater than maxConc
 	      //if so writing individual concentrations to file for closer checking
 	      if( (*concHour).data[0]>maxConc or ( foundProbe and hour==weightTS.rows.begin() ) )
-		{
+              {
 		  std::vector<ScalarFoamFile>::iterator concFile;
-		 
+                  
 		  if(foundProbe)
-		    {
-		      Info<<"Quality control data written to file: "<<qcFileName<< endl;
-		      qcFid<<"Probe name: "<<probeNames[probeNr]<<"\n";
-		    }
+                  {
+                      std::cout<<"Quality control data written to file: "<<qcFileName<< "\n";
+		      qcFid<<"Probe name: "<<(*probeIter).header[0]<<"\n";
+                  }
 		  else
-		    Info<<"Warning: "<<"There are unvalid concentration fields, sum of conc in cell "<<cellCounter<<" is: "<< (*concHour).data[0] <<", max allowed conc is set to: "<<maxConc<<"summary written to: "<<qcFileName<< endl;
+                      std::cout << "Warning: "
+                          << "There are invalid concentration fields, sum of conc in cell "
+                          << cellCounter<<" is: " << (*concHour).data[0]
+                          << ", max allowed conc is set to: " << maxConc
+                          << "summary written to: " << qcFileName << "\n";
 		  
-		  qcFid<<"Time is: "<<hour->year<<"-"<<hour->month<<"-"<<hour->day<<"-"<<hour->hour<<"\n";
-		  qcFid<<"Filename\torgConc\tweight\ttypeConversion\ttotConc\n";
+		  qcFid << "Time is: " << hour->year << "-" << hour->month
+                      << "-" << hour->day << "-" << hour->hour << "\n";
+                  
+		  qcFid << "Filename\torgConc\tweight\ttypeConversion\ttotConc\n";
 		  int concInd=0;
 		  for(concFile=ca.fileVec.begin();concFile!=ca.fileVec.end();concFile++)
 		    {
-		      qcFid<<concFile->getDirName()<<" "<<concFile->fileName<<"\t";
-		      qcFid<<ca.concs[concInd]<<"\t";
-		      qcFid<<(*hour).data[concInd]<<"\t";
-		      qcFid<<typeConversionFactor<<"\t";
-		      qcFid<<ca.concs[concInd]*(*hour).data[concInd]*typeConversionFactor<<"\n";		  
+		      qcFid << concFile->getDirName() << " " << concFile->fileName << "\t";
+		      qcFid << ca.concs[concInd] << "\t";
+		      qcFid << (*hour).data[concInd] << "\t";
+		      qcFid << typeConversionFactor << "\t";
+		      qcFid << ca.concs[concInd]*(*hour).data[concInd]*typeConversionFactor << "\n"; 
 		      concInd++;
 		    }
 		}
@@ -285,7 +346,7 @@ int main(int argc, char *argv[])
 	      
 	      if(background){
 		if(NO2_conversion) {
-		  scalar temp = (*metHour).data[tempInd] + 273.15;
+                  scalar temp = (*metHour).data[tempInd] + 273.15;
 		  scalar glob = (*metHour).data[globInd];
 		  scalar NO2_b = (*bgHour).data[NO2bInd] * microg2ppb(46.0, temp);
 		  scalar NOx_b = (*bgHour).data[NOxbInd] * microg2ppb(46.0, temp);
@@ -349,12 +410,18 @@ int main(int argc, char *argv[])
 	      //Debugging
 	      scalar cellHourlyPerc=concTS.percentile(hourlyPercentile);
 	      statFields[indHourlyPerc].internalField()[celli]=cellHourlyPerc;
-	      //if(cellHourlyPerc>5.71e5)
-	      //	{
-	      //	  Info<<"Cell index for hourly percentile > 5.71e5 is: "<< cellCounter-1<<endl;
-	      //  int last_ind=concTS.nrows-1;
-	      //  Info<<"Date is: "<<concTS.getYear(last_ind)<<"-"<<concTS.getMonth(last_ind)<<"-"<<concTS.getDay(last_ind)<<" "<<concTS.getHour(last_ind)<<" value:"<< concTS.getValue(last_ind)<<endl;
-	      //	}
+	      if(cellHourlyPerc>1.0e3)
+	      	{
+                    std::cout<<"Cell index for hourly percentile > 10000 is: "<< cellCounter-1<<endl;
+                    int last_ind=concTS.nrows-1;
+                    Info<<"Max value date is: "
+                        <<concTS.getYear(last_ind)
+                        <<"-"<<concTS.getMonth(last_ind)
+                        <<"-"<<concTS.getDay(last_ind)
+                        <<" "<<concTS.getHour(last_ind)
+                        <<" value:"<< concTS.getValue(last_ind)<<endl;
+	      	}
+              
 	    }
   
 
@@ -382,13 +449,22 @@ int main(int argc, char *argv[])
 	statFields[indDailyMaxPerc].write();
     }
 
-      if(int(probeCells.size()>0))
-	{	  
-	  probeFid<< probeTS;
-	  probeFid.close();
-	}
+  for(PtrList<timeSeries>::iterator probeIter=probeTsList.begin();
+      probeIter!=probeTsList.end();probeIter++) {
+      OStringStream probeFileNameStream;
+      probeFileNameStream << word(probeDir) << "/" << word((*probeIter).header[0]) <<".csv";
+      std::cout<<"probe file is: "<<probeFileNameStream.str()<<"\n";
+      std::ofstream probeFid;
+      probeFid.open(probeFileNameStream.str().c_str());
+      if(!probeFid.is_open())
+          FatalErrorIn(args.executable())
+              << "Could not open probe output file"<< exit(FatalError);
+      
+      probeFid<< *probeIter;
+      probeFid.close();
+  }
 
-  Info<< "percentileFoam finished successfully\n" << endl;
+  Info<< "statisticsFoam finished successfully\n" << endl;
   return(0);
 }
 

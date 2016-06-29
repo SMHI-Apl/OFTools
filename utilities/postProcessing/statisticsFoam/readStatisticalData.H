@@ -27,24 +27,26 @@ Info<< "Reading statistical data\n" << endl;
   fileName emisFile;
   statisticsDict.lookup("emisFile") >> emisFile;
 
-  fileName probeFile;
-  statisticsDict.lookup("probeFile") >> probeFile;
+  fileName probeDir;
+  statisticsDict.lookup("probeDir") >> probeDir;
 
   Switch background(statisticsDict.lookup("backgroundSwitch"));
   Switch NO2_conversion(statisticsDict.lookup("NO2_conversionSwitch"));
   
   fileName bgFile;
   statisticsDict.lookup("backgroundFile") >> bgFile;
-  
-//  fileName concFileDir;
-//  statisticsDict.lookup("concFileDir") >> concFileDir;
-  
+
+  fileName concFileDir;
+  statisticsDict.lookup("concFileDir") >> concFileDir;
   List<fileName> concFiles;
   statisticsDict.lookup("concFileList")>>concFiles;
 
   std::vector<std::string> concFileNames;
-  for(int i=0; i<concFiles.size();i++)
-	concFileNames.push_back(std::string(concFiles[i].c_str()));
+  for(int i=0; i<int(concFiles.size());i++) {
+      OStringStream concFileNameStream;
+      concFileNameStream << word(concFileDir) << word(concFiles[i]);
+      concFileNames.push_back(std::string(concFileNameStream.str()));
+  }
 
   List<vector> probeList;
   statisticsDict.lookup("probeLocations")>> probeList;
@@ -53,24 +55,29 @@ Info<< "Reading statistical data\n" << endl;
   statisticsDict.lookup("probeNames")>> probeNames;
 
   if(probeList.size() != probeNames.size())
-    FatalErrorIn(args.executable()) << "Number of probes does not match number of probe names given in dictionary: statisticsDict"<< exit(FatalError);
+    FatalErrorIn(args.executable())
+        << "Number of probes does not match number of probe names given in dictionary: statisticsDict"
+        << exit(FatalError);
 
-Info<<"Statistical data has been read\n" << endl;
+  Info<<"Statistical data has been read\n" << endl;
 
-if(concFiles.size()==0)
-  FatalErrorIn(args.executable()) << "No concentration files specified in dictionary: statisticsDict"<< exit(FatalError);
-else
-  Info<<"Number of concentration files given in statisticsDict is:"<<int(concFileNames.size())<<endl;
+  if(concFiles.size()==0)
+    FatalErrorIn(args.executable())
+        << "No concentration files specified in dictionary: statisticsDict"
+        << exit(FatalError);
+  else
+    Info<<"Number of concentration files given in statisticsDict is:"
+        <<int(concFileNames.size())<<endl;
 
-Info<< "Inititalizing percentile calculation!"<<endl;
-Info<< "Percentile of hourly concentrations: "<<hourlyPercentile<<endl;
-Info<< "Percentile of daily average concentrations: "<<dailyAvgPercentile<<endl;
-Info<< "Percentile of daily max concentrations: "<<dailyMaxPercentile<<endl;
-Info<< "Daily values are based on at least "<<nValidsForDaily<<" hourly values"<<endl;
+  Info<< "Inititalizing percentile calculation!"<<endl;
+  Info<< "Percentile of hourly concentrations: "<<hourlyPercentile<<endl;
+  Info<< "Percentile of daily average concentrations: "<<dailyAvgPercentile<<endl;
+  Info<< "Percentile of daily max concentrations: "<<dailyMaxPercentile<<endl;
+  Info<< "Daily values are based on at least "<<nValidsForDaily<<" hourly values"<<endl;
 
-Info<< "Meteorological data from: "<<metFile<<endl;
-Info<< "Emissions from: "<<emisFile<<endl;
-if(background)
-	Info<< "Background concentrations from: "<<bgFile<<endl;
-else
-	Info<< "No background concentrations requested"<<endl;
+  Info<< "Meteorological data from: "<<metFile<<endl;
+  Info<< "Emissions from: "<<emisFile<<endl;
+  if(background)
+      Info<< "Background concentrations from: "<<bgFile<<endl;
+  else
+      Info<< "No background concentrations requested"<<endl;
