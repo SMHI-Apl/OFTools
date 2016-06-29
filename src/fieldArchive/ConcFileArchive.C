@@ -8,7 +8,6 @@ ConcFileArchive::ConcFileArchive(std::vector<std::string> inFileNames)
 	std::string pathRoot, dirNamePart, fileNamePart;
 	for(fn=inFileNames.begin();fn!=inFileNames.end();fn++)
 	{
-	  
 	  pathRoot="";
 	  std::vector<std::string> pathParts,fileNameParts;
 	  std::string separator("/");
@@ -66,8 +65,8 @@ ConcFileArchive::ConcFileArchive(std::vector<std::string> inFileNames)
 				fnStream<<"/"<<concNames[concInd];
 				std::string fileName;
 				fnStream >> fileName;
-				// ScalarFoamFile foamFile(fileName);
-				// fileVec.push_back(foamFile);
+				ScalarFoamFile foamFile(fileName);
+				fileVec.push_back(foamFile);
 				concs.push_back(-9999.0);
 				fileNames.push_back(fileName);
 			}
