@@ -209,14 +209,33 @@ if(NO2_conversion)
   fileName qcFileName=args.rootPath()+"/"+args.globalCaseName()+"/"+"qualityControlFile.txt";  
   Info<<"quality control file: "<<qcFileName.c_str()<<endl;
 
+  std::ofstream ovFid;
+  fileName overviewFileName=args.rootPath()+"/"+args.globalCaseName()+"/"+"concFieldOverview.csv";
+  Info<<"Conc field overview file: "<<overviewFileName.c_str()<<endl;
   // Clear old output file that will be appeded by parallel writes
-  if( Pstream::master()) {
-      qcFid.open(qcFileName.c_str());
-      if(!qcFid.is_open())
-          FatalErrorIn(args.executable())
-              << "Could not open file " << qcFileName << "for writing"
-              << exit(FatalError);
 
-      qcFid<<"Quality assurance of calculations\n";
-      qcFid.close();
-   }
+  // Clear old output files that will be appeded by parallel writes
+  if( Pstream::master()) {
+    ovFid.open(overviewFileName.c_str());
+    if(!ovFid.is_open())
+      FatalErrorIn(args.executable())
+	<< "Could not open file " << overviewFileName << "for writing"
+	<< exit(FatalError);
+    
+    ovFid<<"# Concentration field overview for case: "<< args.globalCaseName()<<"\n";
+    // write field names to header in order of archive fileVec
+    ovFid<<"Probe-name";
+    for(fid=ca.fileVec.begin();fid!=ca.fileVec.end();fid++)
+      ovFid<<"\t"<<(*fid).fileName;
+    ovFid<<"\n";
+    ovFid.close();
+
+    qcFid.open(qcFileName.c_str());
+    if(!qcFid.is_open())
+      FatalErrorIn(args.executable())
+	<< "Could not open file " << qcFileName << "for writing"
+	<< exit(FatalError);
+    
+    qcFid<<"Quality assurance of calculations\n";
+    qcFid.close();
+  }

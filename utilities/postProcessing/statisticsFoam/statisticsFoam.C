@@ -232,8 +232,6 @@ int main(int argc, char *argv[])
   //temporary fix with hard-coded air density
   double typeConversionFactor=1.225*1.0e9;
 
-
-
   qcFid.open(qcFileName.c_str(), ios_base::app);
   if(!qcFid.is_open())
       FatalErrorIn(args.executable())
@@ -245,7 +243,17 @@ int main(int argc, char *argv[])
   scalar doneProc1=0;
   scalar doneProc2=0;
   int probesDone=0;
-  
+ 
+  // Todo: Global field statistics
+  // need to exchange data between procs using PStream!!!
+  // Initializing field statistics
+  // vector<double> localFieldAvgConc, localFieldMaxConc, localFieldMinConc;
+  // for(int concFieldInd=0;concFieldInd < nConcFields;concFieldInd++) {
+  // 	localFieldAvgConc.push_back(0);
+  // 	localFieldMaxConc.push_back(-9e99);
+  // 	localFieldMinConc.push_back(9e99);
+  // }
+
   //Iterating over all internal cells
   Info<<" Number of cells is: "<<nCells<<endl;
   forAll(hourlyAvg.internalField(),celli)
@@ -269,6 +277,13 @@ int main(int argc, char *argv[])
 	for(label concFieldInd=0;concFieldInd < nConcFields;concFieldInd++)
 	  ca.concs[concFieldInd]=concFields[concFieldInd].internalField()[celli];
       }
+
+      // update field statistics with current cell
+      // for(int concFieldInd=0;concFieldInd < nConcFields;concFieldInd++) {
+      // 	localFieldAvgConc[concFieldInd] += ca.concs[concFieldInd];
+      // 	localfieldMaxConc[concFieldInd] = max(localFieldMaxConc[concFieldInd], ca.concs[concFieldInd]);
+      // 	localFieldMinConc[concFieldInd] = min(localFieldMinConc[concFieldInd], ca.concs[concFieldInd]);
+      // }
 
       //Checking if cell label match any of the probe cell labels
       int foundProbe=0;
@@ -297,8 +312,19 @@ int main(int argc, char *argv[])
 	  concHour = concTS.rows.begin();
 	  metHour = metTS.rows.begin();
 
-	  if(foundProbe)
+	  if(foundProbe) {
+	      //init probe ts iterator
               probeHour=(*probeIter).rows.begin();
+
+	      // write conc to field overview	      
+	      // probe name
+	      ovFid<<(*probeIter).header[0];
+	      // values at probe in the different conc fields of the archive
+	      for(int concInd=0;concInd<ca.nConcNames;concInd++)
+		  ovFid << "\t" << ca.concs[concInd];
+	      ovFid << "\n";
+	  }
+	  
 
 	  for(hour=weightTS.rows.begin();hour!=weightTS.rows.end();hour++)
 	    {
@@ -431,6 +457,7 @@ int main(int argc, char *argv[])
     }
 
   qcFid.close();
+  ovFid.close();
 
   if(write3DFields)
     {
