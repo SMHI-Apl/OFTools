@@ -211,7 +211,7 @@ void setLanduse(label landuseCode, wordList sourcePatches,
   
   forAll(sourcePatches,sp)
     {
-        //      Info<< "Processing patch1 " << sourcePatches[sp] << endl;
+      Info<< "Processing patch " << sourcePatches[sp] << endl;
       label patchI=mesh.boundaryMesh().findPatchID(sourcePatches[sp]);
       patchIDs.insert(patchI);
       const polyPatch& pp = mesh.boundaryMesh()[patchI];
@@ -225,7 +225,7 @@ void setLanduse(label landuseCode, wordList sourcePatches,
               landuseCode=label(lu.getValue(double(x),double(y)));
               
           //Info<< "Set lu code " << scalar(landuseCode) << " in (x,y) = (" << x << ','  << y << ")" << endl;
-	  landuse_.boundaryField()[patchI][facei]=scalar(landuseCode);
+	  landuse_.boundaryFieldRef()[patchI][facei]=scalar(landuseCode);
 	}
 
       forAll(z0_.boundaryField()[patchI],facei)
@@ -234,11 +234,12 @@ void setLanduse(label landuseCode, wordList sourcePatches,
           //Info<< "Set lu code " << scalar(landuseCode) << " in (x,y) = (" << x << ','  << y << ")" << endl;
           scalar landuseCode = landuse_.boundaryField()[patchI][facei];
           tensor landuse_parameters = landuseList[indexMap[landuseCode]];
-          z0_.boundaryField()[patchI][facei] = landuse_parameters.yy();; 
+          z0_.boundaryFieldRef()[patchI][facei] = landuse_parameters.yy();; 
         }
 
-      Foam::incompressible::nutkAtmRoughWallFunctionFvPatchScalarField& wallNut =
-	refCast<Foam::incompressible::nutkAtmRoughWallFunctionFvPatchScalarField>(nut_.boundaryField()[patchI]);
+      Foam::nutkAtmRoughWallFunctionFvPatchScalarField& wallNut =
+        refCast<Foam::nutkAtmRoughWallFunctionFvPatchScalarField>(nut_.boundaryFieldRef()[patchI]);
+
       scalarField& z0 = wallNut.z0();
 
       forAll(landuse_.boundaryField()[patchI],facei)
@@ -246,7 +247,7 @@ void setLanduse(label landuseCode, wordList sourcePatches,
           scalar landuseCode = landuse_.boundaryField()[patchI][facei];
           tensor landuse_parameters = landuseList[indexMap[landuseCode]];
           z0[facei] =  landuse_parameters.yy();
-          landuse_.boundaryField()[patchI][facei];
+          landuse_.boundaryFieldRef()[patchI][facei] = landuseCode;
 	}
 
     }
@@ -265,6 +266,7 @@ void setLanduse(label landuseCode, wordList sourcePatches,
      dimensionedScalar("d", dimLength, SMALL),
      calculatedFvPatchScalarField::typeName
      );
+
   d = (const volScalarField&) groundDist(mesh,patchIDs).y();
 
   forAll(d.internalField(),celli)
@@ -281,10 +283,10 @@ void setLanduse(label landuseCode, wordList sourcePatches,
       scalar groundDistance=d.internalField()[celli];
       if (groundDistance<height && height != 0)
 	{
-	  landuse_.internalField()[celli]=landuseCode;
+	  landuse_.primitiveFieldRef()[celli]=landuseCode;
 	  label distIndex = label(round(groundDistance/height*10));//assumes that the heightDistribution is described by 11 values(step of 0.1*h) thus giving indices 0-10
 	  scalar LADMax=code.zx();
-	  LAD_.internalField()[celli]=heightDist[distIndex]*LADMax;
+	  LAD_.primitiveFieldRef()[celli]=heightDist[distIndex]*LADMax;
 	}
     }
 }
@@ -340,22 +342,22 @@ int main(int argc, char *argv[])
   // FatalErrorIn(args.executable()) <<": landuse code not found in landuseList in dictionary landuseData" <<exit(FatalError);
 
   //Initializing the landuse internalField and values on wall patches
-  landuse.internalField() = -1;
-  z0.internalField() = -1;
+  landuse.primitiveFieldRef() = -1;
+  z0.primitiveFieldRef() = -1;
   const fvPatchList& patches = mesh.boundary();
 
   forAll(patches,patchI)
     {
       const fvPatch& curPatch = patches[patchI];
       if(isType<wallFvPatch>(curPatch))
-	landuse.boundaryField()[patchI]=-1;
+	landuse.boundaryFieldRef()[patchI]=-1;
     }
 
     forAll(patches,patchI)
     {
       const fvPatch& curPatch = patches[patchI];
       if(isType<wallFvPatch>(curPatch))
-	z0.boundaryField()[patchI]=-1;
+	z0.boundaryFieldRef()[patchI]=-1;
     }
 
   forAll(landuseList,codei)
@@ -364,8 +366,8 @@ int main(int argc, char *argv[])
       scalar height = landuseList[codei].yz();
       if(landuseList[codei].zx()==-1)
 	{
-	scalar maxLAD = getMaxLAD(heightDistribution,height,LAI);
-	landuseList[codei].zx()=maxLAD;
+          scalar maxLAD = getMaxLAD(heightDistribution,height,LAI);
+          landuseList[codei].zx()=maxLAD;
 	}
     }
 

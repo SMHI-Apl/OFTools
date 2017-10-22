@@ -84,7 +84,7 @@ void Foam::groundDist::correct(labelHashSet patchIDs)
         {
             scalarField& waveFld = wave.patchDistance()[patchI];
 
-            boundaryField()[patchI].transfer(waveFld);
+            boundaryFieldRef()[patchI].transfer(waveFld);
         }
     }
 
