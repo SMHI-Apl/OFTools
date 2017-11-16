@@ -235,7 +235,12 @@ int main(int argc, char *argv[])
   qcFid.open(qcFileName.c_str(), ios_base::app);
   if(!qcFid.is_open())
       FatalErrorIn(args.executable())
-          << "Could not open quality control file for max conc"<< exit(FatalError);
+          << "Could not open quality control file"<< exit(FatalError);
+
+  ovFid.open(overviewFileName.c_str(), ios_base::app);
+  if(!ovFid.is_open())
+      FatalErrorIn(args.executable())
+          << "Could not open conc field overview file"<< exit(FatalError);
 
   //Initializing progress counters
   scalar cellCounter=1;
@@ -255,7 +260,7 @@ int main(int argc, char *argv[])
   // }
 
   //Iterating over all internal cells
-  Info<<" Number of cells is: "<<nCells<<endl;
+  Info<<" Number of cells on master process is: "<<nCells<<endl;
   forAll(hourlyAvg.internalField(),celli)
     {
       //Progress counter
@@ -318,11 +323,13 @@ int main(int argc, char *argv[])
 
 	      // write conc to field overview	      
 	      // probe name
+              std::cout<<"Writing concentrations to field overview"<<"\n";
 	      ovFid<<(*probeIter).header[0];
-	      // values at probe in the different conc fields of the archive
-	      for(int concInd=0;concInd<ca.nConcNames;concInd++)
+              // values at probe in the different conc fields of the archive
+	      for(int concInd=0;concInd<nConcFields;concInd++)
 		  ovFid << "\t" << ca.concs[concInd];
 	      ovFid << "\n";
+              ovFid.flush();
 	  }
 	  
 

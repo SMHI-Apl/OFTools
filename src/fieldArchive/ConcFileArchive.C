@@ -49,7 +49,6 @@ ConcFileArchive::ConcFileArchive(std::vector<std::string> inFileNames)
 	nWdirs=int(wdirs.size());
 	nWspeeds=int(wspeeds.size());
 	nConcNames=int(concNames.size());
-	
 
 	for(int concInd=0;concInd<nConcNames;concInd++)
 	{

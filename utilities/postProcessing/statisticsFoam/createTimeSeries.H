@@ -225,8 +225,13 @@ if(NO2_conversion)
     ovFid<<"# Concentration field overview for case: "<< args.globalCaseName()<<"\n";
     // write field names to header in order of archive fileVec
     ovFid<<"Probe-name";
-    for(fid=ca.fileVec.begin();fid!=ca.fileVec.end();fid++)
-      ovFid<<"\t"<<(*fid).fileName;
+    for(int concFieldInd=0;concFieldInd < int(ca.fileNames.size()); concFieldInd++) {
+        fileName fieldFilePath(ca.fileNames[concFieldInd]);
+        OStringStream concFieldTitleStream;
+        concFieldTitleStream << word(fieldFilePath.name()) << "_" << fieldFilePath.path().name();
+        word concFieldTitle(concFieldTitleStream.str());
+        ovFid<<"\t"<<concFieldTitle;
+    }
     ovFid<<"\n";
     ovFid.close();
 
