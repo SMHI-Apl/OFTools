@@ -163,7 +163,7 @@ void Foam::fv::dalpeMassonCanopySource::addSup
 
     fvMatrix<scalar> Sk
     (
-     betaP_*canopy*pow(mag(U),3) - fvm::SuSp(betaD_*canopy*mag(U), k)
+     betaP_*canopy*pow(mag(U),3) - fvm::Sp(betaD_*canopy*mag(U), k)
     );
 
     eqn +=  Sk;
@@ -177,7 +177,7 @@ void Foam::fv::dalpeMassonCanopySource::addSup
     
     fvMatrix<scalar> Sepsilon
     (
-     fvm::SuSp(canopy/k*(C4_*betaP_*pow(mag(U),3) - C5_*betaD_*k*mag(U)), epsilon)
+     fvm::Sp(canopy/k*(C4_*betaP_*pow(mag(U),3) - C5_*betaD_*k*mag(U)), epsilon)
     );
 
     eqn += Sepsilon;    
