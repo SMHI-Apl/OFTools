@@ -1,4 +1,6 @@
-sources/DalpeMassonCanopySource/DalpeMassonCanopySource.C
-sources/DalpeMassonCanopySource/landuseClass.C
+sources/canopySource/landuseClass.C
+sources/canopySource/canopySource.C
+sources/dalpeMassonCanopySource/dalpeMassonCanopySource.C
+sources/svenssonHaggkvistCanopySource/svenssonHaggkvistCanopySource.C
 
 LIB = $(FOAM_USER_LIBBIN)/libABLFvOptions
