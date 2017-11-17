@@ -418,6 +418,13 @@ void Raster::whereAdd(const Raster &rast,double value)
     }
 }
 
+void Raster::translate(const double &x, const double &y) {
+  xll += x;
+  xur += x;
+  yll += y;
+  yur += y;
+}
+
 Raster where(const Raster &rast,const double &val1, const double &val2)
 {
   Raster temp(rast,0);

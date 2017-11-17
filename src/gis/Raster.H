@@ -54,7 +54,7 @@ public:
        
         void scale(double value);
         void whereAdd(const Raster &rast,double value);
-	
+        void translate(const double &x, const double &y);
 	~Raster();
 
 
