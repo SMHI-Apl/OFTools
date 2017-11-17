@@ -29,7 +29,6 @@ License
 #include "fvCFD.H"
 #include "addToRunTimeSelectionTable.H"
 #include "groundDist.H"
-#include "Raster.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -131,10 +130,51 @@ void Foam::fv::canopySource::checkData() const
       << "Missing landuse classes for canopySource in constant/fvOptions"
       << exit(FatalError);
 
-  if(sourcePatches_.size() == 0 && !readFromRaster_)
+  if(sourcePatches_.size() == 0 && !readLanduseFromRaster_)
     FatalErrorInFunction
       << "No source patches given for landuse data"
       << exit(FatalError);
+}
+
+Raster Foam::fv::canopySource::readRaster(fileName rasterPath){
+
+        originOffsetX_ = coeffs_.lookupOrDefault("rasterOriginX", 0, false, false);
+        originOffsetY_ = coeffs_.lookupOrDefault("rasterOriginY", 0, false, false);
+
+        Raster raster;
+        // read raster
+        if(!raster.read(rasterPath.c_str()))
+          FatalErrorInFunction
+            << "Cannot read file " << rasterPath
+            << exit(FatalError);
+        raster.translate(double(originOffsetX_), double(originOffsetY_));
+        
+        Info << "    Raster: " << rasterPath << endl
+             << "        Extent: " << raster.xll << "< X <" << raster.xur << " and "
+             << "        " << raster.yll << "< Y <" << raster.yur << endl
+             << "        Dimensions: " << " nrows= " << raster.nrows << " ncols= " << raster.ncols << endl
+             << "        Cellsize=" << raster.cellsize << endl;
+        return raster;
+}
+
+void Foam::fv::canopySource::readLanduseClasses()
+{
+  // get landuse definitions
+  dictionary landuseDict = coeffs_.subDict("landuse");    
+  wordList landuseNames(landuseDict.toc());
+  
+  Info << "    ---------------------Landuse categories--------------------" << endl;
+  Info << "    name\tcode\tCd\tLAI\tz0\theight\tLADmax" << endl;
+  forAll(landuseNames, i) {
+      word name = landuseNames[i];
+      //dictionary luDict = landuseDict.subDict(name);
+      landuseClass lu(landuseDict, name);
+      landuseTable_.insert(lu.code(), lu);
+      Info << "    " << lu.name() << "\t"<< lu.code() << "\t" << lu.Cd()
+           << "\t" << lu.LAI() << "\t" << lu.z0() << "\t" << lu.height()
+           << "\t" << lu.LADmax() << endl;
+  }
+
 }
 
 
@@ -143,78 +183,57 @@ bool Foam::fv::canopySource::read(const dictionary& dict)
     if (!option::read(dict))
       return false;
 
-    
-      if (active()) {
-        coeffs_.lookup("sourcePatches") >> sourcePatches_;
-        rasterOriginX_ = coeffs_.lookupOrDefault("rasterOriginX", 0, false, false);
-        rasterOriginY_ = coeffs_.lookupOrDefault("rasterOriginY", 0, false, false);
-        readFromRaster_ = coeffs_.lookupOrDefault("readFromRaster", false, false, false);
-        writeFields_ = coeffs_.lookupOrDefault("writeFields", false, false, false);
-        
-        // read landuse raster
-        if (readFromRaster_ ) {
-          coeffs_.lookup("rasterFileName") >>  rasterFileName_;
-          
-          if(!raster_.read(rasterFileName_.c_str()))
-            FatalErrorInFunction
-              << "Cannot read file " << rasterFileName_
-              << exit(FatalError);
-
-          raster_.xll = raster_.xll - double(rasterOriginX_);
-          raster_.xur = raster_.xur - double(rasterOriginX_);
-          raster_.yll = raster_.yll - double(rasterOriginY_);
-          raster_.yur = raster_.yur - double(rasterOriginY_);
-          
-          Info << "    -----------------------Raster specification----------" << endl
-               << "    Extent: " << raster_.xll << "< X <" << raster_.xur << " and "
-               << "    " << raster_.yll << "< Y <" << raster_.yur << endl
-               << "    Dimensions: " << " nrows= " << raster_.nrows << " ncols= " << raster_.ncols << endl
-               << "    Cellsize=" << raster_.cellsize << endl;
-        }
-          
-        // get landuse definitions
-        dictionary landuseDict = coeffs_.subDict("landuse");    
-        wordList landuseNames(landuseDict.toc());
-
-        Info << "    ---------------------Landuse categories--------------------" << endl;
-        Info << "    name\tcode\tCd\tLAI\tz0\theight\tLADmax" << endl;
-        forAll(landuseNames, i) {
-          word name = landuseNames[i];
-          //dictionary luDict = landuseDict.subDict(name);
-          landuseClass lu(landuseDict, name);
-          landuseTable_.insert(lu.code(), lu);
-          Info << "    " << lu.name() << "\t"<< lu.code() << "\t" << lu.Cd()
-               << "\t" << lu.LAI() << "\t" << lu.z0() << "\t" << lu.height()
-               << "\t" << lu.LADmax() << endl;
-        }
-
-        if (!readFromRaster_) {
-          labelList patchLanduseList;
-          coeffs_.lookup("patchLanduse") >> patchLanduseList;
-          if((patchLanduseList.size() != sourcePatches_.size()))
-            FatalErrorInFunction
-              << "Wrong number of rows in patchLanduse,"
-              <<"should be equal to number of source patches "
-              << exit(FatalError);
-          
-          forAll(sourcePatches_, i) {
-            label patchID = mesh_.boundaryMesh().findPatchID(sourcePatches_[i]);
-            if (patchID == -1)
-              FatalIOErrorInFunction(
-                "void Foam::fv::canopySource::read("
-                "const dictionary&)"
-              ) << "Cannot find patch " << sourcePatches_[i] << exit(FatalIOError);
-
-            label patchLanduseCode = patchLanduseList[i];
-            landuseClass lu = landuseTable_[patchLanduseCode];
-            
-            patchLanduseTable_.insert(patchID, landuseTable_[lu.code()]);
-          }
-        }
-        checkData();
-        calculateCanopy();
-      }
+    // if option is not active, it will not be read
+    if (! active())
       return true;
+
+    // for which patches to set landuse
+    coeffs_.lookup("sourcePatches") >> sourcePatches_;
+
+    readLanduseFromRaster_ = coeffs_.lookupOrDefault("readLanduseFromRaster", false, false, false);
+    readCanopyHeightFromRaster_ = coeffs_.lookupOrDefault("readCanopyHeightFromRaster", false, false, false);
+    writeFields_ = coeffs_.lookupOrDefault("writeFields", false, false, false);
+    
+    if (readLanduseFromRaster_ ) {
+      fileName landuseRasterFileName;
+      coeffs_.lookup("landuseRasterFileName") >>  landuseRasterFileName;
+      landuseRaster_ = readRaster(landuseRasterFileName);
+    }
+
+    if (readCanopyHeightFromRaster_ ) {
+      fileName canopyHeightRasterFileName;
+      coeffs_.lookup("canopyHeightRasterFileName") >>  canopyHeightRasterFileName;
+      canopyHeightRaster_ = readRaster(canopyHeightRasterFileName);
+    }
+
+    readLanduseClasses();
+
+    // read landuse codes for each patch
+    if (!readLanduseFromRaster_) {
+      labelList patchLanduseList;
+      coeffs_.lookup("patchLanduse") >> patchLanduseList;
+      if((patchLanduseList.size() != sourcePatches_.size()))
+        FatalErrorInFunction
+          << "Wrong number of rows in patchLanduse,"
+          <<"should be equal to number of source patches "
+          << exit(FatalError);
+          
+      forAll(sourcePatches_, i) {
+        label patchID = mesh_.boundaryMesh().findPatchID(sourcePatches_[i]);
+        if (patchID == -1)
+          FatalErrorInFunction
+            << "Cannot find landuse source patch: "
+            << sourcePatches_[i]
+            << exit(FatalError);
+
+        label patchLanduseCode = patchLanduseList[i];
+        landuseClass lu = landuseTable_[patchLanduseCode];        
+        patchLanduseTable_.insert(patchID, landuseTable_[lu.code()]);
+      }
+    }
+    checkData();
+    calculateCanopy();
+    return true;
 }
 
 void Foam::fv::canopySource::setPatchLanduse(
@@ -242,10 +261,10 @@ void Foam::fv::canopySource::setPatchLanduse(
     {
       
       landuseClass lu;
-      if (readFromRaster_) {
+      if (readLanduseFromRaster_) {
         scalar x=pp.faceCentres()[facei].x();
         scalar y=pp.faceCentres()[facei].y();
-        lu = landuseTable_[label(raster_.getValue(double(x),double(y)))];
+        lu = landuseTable_[label(landuseRaster_.getValue(double(x),double(y)))];
       }
       else {
         lu = patchLanduseTable_[patch];
@@ -262,29 +281,32 @@ void Foam::fv::canopySource::setPatchLanduse(
       nutZ0[facei] = patchZ0[facei];
     }
 
-  forAll(d.internalField(),celli)
+  forAll(d.internalField(), celli)
     {
 
       // get landuse class
       landuseClass lu;
-      if (readFromRaster_) {
 
-        scalar x=mesh.C()[celli].x();
-        scalar y=mesh.C()[celli].y();
-        lu = landuseTable_[label(raster_.getValue(double(x),double(y)))];
-      }
-      else {
+      scalar x = mesh.C()[celli].x();
+      scalar y = mesh.C()[celli].y();
+      scalar height = 0;
+
+      if (readLanduseFromRaster_)
+        lu = landuseTable_[label(landuseRaster_.getValue(double(x),double(y)))];
+      else
         lu = patchLanduseTable_[patch];
-      }
 
-      // set landuse tp canopy height and LAD according to LADProfile
+      if (readCanopyHeightFromRaster_)
+        height = canopyHeightRaster_.getValue(double(x), double(y));
+      else
+        height = lu.height();
+
+      // set landuse up to canopy height and LAD according to LADProfile
       scalar patchDistance = d.internalField()[celli];
-      if (patchDistance < lu.height() && lu.height() != 0)
+      if (patchDistance < height && height > 0)
 	{
-	  landuse.primitiveFieldRef()[celli]=scalar(lu.code());
-          scalar deltaz = lu.height() / scalar(lu.LADProfile().size());
-          label LADProfileValueIndex = label(round(patchDistance / deltaz));
-	  LAD.primitiveFieldRef()[celli] = lu.LADProfile()[LADProfileValueIndex] * lu.LADmax();
+	  landuse.primitiveFieldRef()[celli] = scalar(lu.code());
+	  LAD.primitiveFieldRef()[celli] = lu.LAD(patchDistance, height);
 	}
     }
 }

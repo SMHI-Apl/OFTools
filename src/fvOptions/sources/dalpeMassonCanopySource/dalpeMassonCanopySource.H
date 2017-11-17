@@ -33,19 +33,87 @@ Author
     David Segersson, Swedish Meteorological and Hydrological Institute, david.segersson@smhi.se
 
 Description
-    Momentum and turbulence source/sink-terms for tree canopy according to
-    B. Dalpé and C. Masson. Numerical simulation of wind flow near a forest
-    edge. J. of Wind Eng. and Ind. Aerodyn, 2006
+    
+    Momentum source term is expressed as:
+        \f[
+            S_u = -\rho C_d \alpha u^2
+        \f]
 
-Dalpé & Masson, 2006
+    Source term for k is expressed as:
+
+        \f[
+            S_k = \rho C_d \alpha \left(\beta_p u^3 - \beta_d k u \right)
+        \f]
+
+    Source term for epsilon is expressed as:
+
+        \f[
+            S_{\epsilon}=\rho C_d \alpha \frac{\epsilon}{k} \left(C_{\epsilon 4} \beta_p u^3 - C_{\epsilon 5} \beta_d k u \right)
+        \f]
+
+    where
+    \beta_p (1.0), \betad_d (5.03), C_{\epsilon 4} (0.78) and C_{epsilon 5} (0.78) are dimensionless coefficients
+    \vartable
+        \rho           | density
+        u              | magnitude of velocity
+        k              | turbulent kinetic energy
+        \alpha         | leaf area density [m]
+        C_d            | tree canopy drag coefficient
+    \endvartable
+
+    Use with any variant of the k-\epsilon turbulence model.
+
+    Reference:
+       Momentum and turbulence source/sink-terms for tree canopy according to
+       B. Dalpé and C. Masson. Numerical simulation of wind flow near a forest
+       edge. J. of Wind Eng. and Ind. Aerodyn, 2006
+
     
 Usage
     Example usage:
     \verbatim
-    SBM
+    canopy
     {
-        type            dalpeMassonCanopySource;
-        active          on;
+        type                       dalpeMassonCanopySource;
+        active                     on;              // toggle the option
+        writeFields                on;              // write to disk
+        readLanduseFromRaster      on;              // read landuse from raster
+        readCanopyHeightFromRaster on;              // read canopy height from raster
+        sourcePatches              (ground forest); // for which patches to set landuse
+        patchLanduse               (0 1);           // landuse code per patch (if not read from raster)
+
+        landuse
+        {
+
+            low_birch                               // name of landuse class
+            {
+                code 1;                             // code of landuse class
+                Cd 0.2;                             // drag coefficient of trees
+                LAI 2.15;                           // Leaf Area Index (used if LADmax is not specified)
+                LADmax 1.2;                         // Maximum Leaf Area Density [m ^-1]
+                z0 0.06;                            // roughness length [m]
+                height 7.5;                         // tree canopy height (if not read from raster)
+                
+                // Vertical profile of Leaf Area Density
+                // first value is closest to ground
+                // each value represents an equal share of the tree height
+                // e.g. for a 4 m tree and 4 values, each value will represent 1 m
+                // values are scaled so that the highest will correspond to LADMax                
+
+                LADProfile ( 0.05 0.1 0.15 0.35 1.1 0.9 0.5 0.2 0.15 0.05 0.01 );
+            };
+
+            grass
+            {
+                code 0;
+                Cd 0.2;
+                LAI 0;
+                z0 0.06;
+                height 0;
+                LADProfile ( 0.05 0.1 0.15 0.35 1.1 0.9 0.5 0.2 0.15 0.05 0.01 );
+            };
+
+        };
     }
     \endverbatim
 

@@ -140,14 +140,14 @@ void Foam::fv::svenssonHaggkvistCanopySource::addSup
     const volVectorField& U = mesh_.lookupObject<volVectorField>("U");
 
     
-    // fvMatrix<scalar> Sepsilon
-    // (
-    //  fvm::Sp(canopy*CpEps1_/k*pow(mag(U),3), epsilon)
-    // );
+    fvMatrix<scalar> Sepsilon
+    (
+       fvm::Sp(canopy*CpEps1_/k*pow(mag(U),3), epsilon)
+    );
 
-    // eqn += Sepsilon;
-
-    eqn += canopy*CpEps1_*epsilon/k*pow(mag(U),3);
+    eqn += Sepsilon;
+    
+    // eqn += canopy*CpEps1_*epsilon/k*pow(mag(U),3);
   }
 }
 

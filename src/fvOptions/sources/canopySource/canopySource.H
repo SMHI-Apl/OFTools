@@ -30,10 +30,60 @@ Group
     grpFvOptionsSources
 
 Author
-    David Segersson, Swedish Meteorological and Hydrological Institute, david.segersson@smhi.se
+    David Segersson, Swedish Meteorological and Hydrological Institute
+    david.segersson@smhi.se
 
 Description
     Base class for momentum and turbulence source/sink-terms for tree canopy.
+
+
+Usage
+    Example usage:
+    \verbatim
+    canopy
+    {
+        type                       canopySource;
+        active                     on;              // toggle the option
+        writeFields                on;              // write to disk
+        readLanduseFromRaster      on;              // read landuse from raster
+        readCanopyHeightFromRaster on;              // read canopy height from raster
+        sourcePatches              (ground forest); // for which patches to set landuse
+        patchLanduse               (0 1);           // landuse code per patch (if not read from raster)
+
+        landuse
+        {
+
+            low_birch                               // name of landuse class
+            {
+                code 1;                             // code of landuse class
+                Cd 0.2;                             // drag coefficient of trees
+                LAI 2.15;                           // Leaf Area Index (used if LADmax is not specified)
+                LADmax 1.2;                         // Maximum Leaf Area Density [m ^-1]
+                z0 0.06;                            // roughness length [m]
+                height 7.5;                         // tree canopy height (if not read from raster)
+                
+                // Vertical profile of Leaf Area Density
+                // first value is closest to ground
+                // each value represents an equal share of the tree height
+                // e.g. for a 4 m tree and 4 values, each value will represent 1 m
+                // values are scaled so that the highest will correspond to LADMax                
+
+                LADProfile ( 0.05 0.1 0.15 0.35 1.1 0.9 0.5 0.2 0.15 0.05 0.01 );
+            };
+
+            grass
+            {
+                code 0;
+                Cd 0.2;
+                LAI 0;
+                z0 0.06;
+                height 0;
+                LADProfile ( 0.05 0.1 0.15 0.35 1.1 0.9 0.5 0.2 0.15 0.05 0.01 );
+            };
+
+        };
+    }
+    \endverbatim
     
 SourceFiles
     canopySource.C
@@ -72,20 +122,32 @@ protected:
 
         // member data for landuse
         wordList sourcePatches_;
-        fileName rasterFileName_;
-        scalar rasterOriginX_;
-        scalar rasterOriginY_;
-        Switch readFromRaster_;
         autoPtr<volScalarField> canopy_;
+
         HashTable<landuseClass, label> landuseTable_;
         HashTable<landuseClass, label> patchLanduseTable_;
-        Raster raster_;
+
+        // read landuse from raster instead of specifying per patch
+        Switch readLanduseFromRaster_;
+        Raster landuseRaster_;
+
+        // read canopy height from raster instead of specifying per landuse class
+        Switch readCanopyHeightFromRaster_;
+        Raster canopyHeightRaster_;
+
+        // translation from coordiantes in raster to coordinates in mesh
+        scalar originOffsetX_;
+        scalar originOffsetY_;
+
         Switch writeFields_;
+
+        // if variables are present on disk, they are read instead of calculated
+        // this allows setting the data with external programs
         bool _LAD_from_disk;
         bool _landuse_from_disk;
         bool _z0_from_disk;
 
-        //- Source term to momentum equation
+        //- Source terms to momentum equation (for solvers with and without explicit density)
         void addSup
         (
             const volScalarField& rho,
@@ -108,12 +170,14 @@ protected:
 
         void checkData() const;
 
-        // Private Member Functions
+        // Member Functions
+        Raster readRaster(fileName rasterPath);
         void calculatePatchDistance(label patch, volScalarField &d);
         void setPatchLanduse(label patch, volScalarField &landuse, 
                              volScalarField &LAD, volScalarField &z0,
                              volScalarField &nut, volScalarField &d);
         void calculateCanopy();
+  void readLanduseClasses();
 
   
 public:
