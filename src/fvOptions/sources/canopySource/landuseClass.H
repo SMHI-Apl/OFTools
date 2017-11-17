@@ -81,6 +81,7 @@ class landuseClass {
       return LADProfile_;
     }
 
+  scalar LAD(scalar z, scalar treeHeight);
     void LADmaxFromLAI();
     scalar integrateLAD();
 
