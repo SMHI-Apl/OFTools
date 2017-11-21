@@ -130,7 +130,6 @@ void Foam::fv::svenssonHaggkvistCanopySource::addSup
   if (eqn.psi().name() == word("k")) {
 
     const volVectorField& U = mesh_.lookupObject<volVectorField>("U");
-
     eqn += canopy*pow(mag(U),3);
   }
   else if (eqn.psi().name() == word("epsilon")) {
@@ -146,8 +145,6 @@ void Foam::fv::svenssonHaggkvistCanopySource::addSup
     );
 
     eqn += Sepsilon;
-    
-    // eqn += canopy*CpEps1_*epsilon/k*pow(mag(U),3);
   }
 }
 
@@ -162,12 +159,8 @@ void Foam::fv::svenssonHaggkvistCanopySource::addSup
 
   const volScalarField& canopy = canopy_;
 
-  if (eqn.psi().name() == word("k")) {
-
-    // volScalarField Fk1("Fk1",canopy_*betaP_*pow(mag(U_),3));
-    
+  if (eqn.psi().name() == word("k")) {   
     const volVectorField& U = mesh_.lookupObject<volVectorField>("U");
-
 
     eqn += rho*canopy*pow(mag(U),3);
   }
@@ -180,7 +173,7 @@ void Foam::fv::svenssonHaggkvistCanopySource::addSup
 
     fvMatrix<scalar> Sepsilon
     (
-     fvm::SuSp(rho*canopy*CpEps1_/k*pow(mag(U),3), epsilon)
+     fvm::Sp(rho*canopy*CpEps1_/k*pow(mag(U),3), epsilon)
     );
 
     

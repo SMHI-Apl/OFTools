@@ -93,7 +93,6 @@ int Raster::read(const char fileName[])
    try
      {
        std::string tmp;
-       std::cout<<"Reading file:  "<<fileName<<"\n";
        std::ifstream fin(fileName);
 
        fin>>tmp; fin >> ncols;
@@ -150,7 +149,7 @@ Raster& Raster::operator=(const Raster &rhs)
 int Raster::getIndex(double x, double y,int& row, int& col)
 {
     if((x<xll or y<yll) or (x > xur or y > yur))
-		return 0;   
+      return 0;   
     else
     {
      	col=int((x-xll)/cellsize);
@@ -162,6 +161,14 @@ int Raster::getIndex(double x, double y,int& row, int& col)
         return 1;
     }
 }
+
+bool Raster::inside(double x, double y)
+{
+  if((x<xll or y<yll) or (x > xur or y > yur))
+    return false;
+  else
+    return true;
+}  
 
 double Raster::getValue(double x, double y)
 {

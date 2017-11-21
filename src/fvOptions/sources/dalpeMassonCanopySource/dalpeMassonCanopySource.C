@@ -100,7 +100,6 @@ Foam::fv::dalpeMassonCanopySource::dalpeMassonCanopySource
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 
-
 void Foam::fv::dalpeMassonCanopySource::addSup
 (
     fvMatrix<vector>& eqn,
@@ -140,9 +139,7 @@ void Foam::fv::dalpeMassonCanopySource::addSup
     );
 
     eqn -=  S_canopy;
-  }
-
-  
+  }  
  }
 
 
@@ -155,8 +152,6 @@ void Foam::fv::dalpeMassonCanopySource::addSup
   const volScalarField& canopy = canopy_;
 
   if (eqn.psi().name() == word("k")) {
-
-    // volScalarField Fk1("Fk1",canopy_*betaP_*pow(mag(U_),3));
     
     const volScalarField& k = eqn.psi();
     const volVectorField& U = mesh_.lookupObject<volVectorField>("U");
@@ -196,8 +191,6 @@ void Foam::fv::dalpeMassonCanopySource::addSup
   const volScalarField& canopy = canopy_;
 
   if (eqn.psi().name() == word("k")) {
-
-    // volScalarField Fk1("Fk1",canopy_*betaP_*pow(mag(U_),3));
     
     const volScalarField& k = eqn.psi();
     const volVectorField& U = mesh_.lookupObject<volVectorField>("U");

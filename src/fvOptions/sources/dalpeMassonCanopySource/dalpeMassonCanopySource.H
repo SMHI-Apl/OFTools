@@ -227,28 +227,26 @@ public:
         {
             return C5_;
         }
+ 
+        // add source terms to momentum equations
+        void addSup
+        (
+            const volScalarField& rho,
+            fvMatrix<vector>& eqn,
+            const label fieldi
+        );
 
-
-        //- Source term to momentum equation
         void addSup
         (
             fvMatrix<vector>& eqn,
             const label fieldi
         );
+
 
         //- Source term to scalar equations (k & epsilon)
         void addSup
         (
             fvMatrix<scalar>& eqn,
-            const label fieldi
-        );
-
-
-        //- Source term to compressible momentum equation
-        void addSup
-        (
-            const volScalarField& rho,
-            fvMatrix<vector>& eqn,
             const label fieldi
         );
 

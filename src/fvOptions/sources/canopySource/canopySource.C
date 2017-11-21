@@ -137,24 +137,28 @@ void Foam::fv::canopySource::checkData() const
 }
 
 Raster Foam::fv::canopySource::readRaster(fileName rasterPath){
+  
+  vector translationVector(0, 0, 0);
+  translationVector = coeffs_.lookupOrDefault("translateRaster", translationVector, false, false);
+  // translateRasterX_ = coeffs_.lookupOrDefault("translateRaster", vector0, false, false);
+  // translateRasterY_ = coeffs_.lookupOrDefault("translateRasterY", 0, false, false);
 
-        originOffsetX_ = coeffs_.lookupOrDefault("rasterOriginX", 0, false, false);
-        originOffsetY_ = coeffs_.lookupOrDefault("rasterOriginY", 0, false, false);
+  Raster raster;
 
-        Raster raster;
-        // read raster
-        if(!raster.read(rasterPath.c_str()))
-          FatalErrorInFunction
-            << "Cannot read file " << rasterPath
-            << exit(FatalError);
-        raster.translate(double(originOffsetX_), double(originOffsetY_));
-        
-        Info << "    Raster: " << rasterPath << endl
-             << "        Extent: " << raster.xll << "< X <" << raster.xur << " and "
-             << "        " << raster.yll << "< Y <" << raster.yur << endl
-             << "        Dimensions: " << " nrows= " << raster.nrows << " ncols= " << raster.ncols << endl
-             << "        Cellsize=" << raster.cellsize << endl;
-        return raster;
+  // read raster
+  if(!raster.read(rasterPath.c_str()))
+    FatalErrorInFunction
+      << "Cannot read raster file: " << rasterPath
+      << exit(FatalError);
+
+  raster.translate(double(translationVector.x()), double(translationVector.y()));
+  
+  Info << "    Reading raster: " << rasterPath << endl
+       << "    (x1, y1, x2, y2): ("
+       << raster.xll << ", " << raster.yll << ", " << raster.xur << ", " << raster.yur
+       << ") (nrows, ncols): (" << raster.nrows << " ," << raster.ncols
+       << ") cellsize: " << raster.cellsize << endl << endl;
+  return raster;
 }
 
 void Foam::fv::canopySource::readLanduseClasses()
@@ -163,7 +167,8 @@ void Foam::fv::canopySource::readLanduseClasses()
   dictionary landuseDict = coeffs_.subDict("landuse");    
   wordList landuseNames(landuseDict.toc());
   
-  Info << "    ---------------------Landuse categories--------------------" << endl;
+  Info << endl
+       << "    ---------------------Landuse categories--------------------" << endl;
   Info << "    name\tcode\tCd\tLAI\tz0\theight\tLADmax" << endl;
   forAll(landuseNames, i) {
       word name = landuseNames[i];
@@ -174,7 +179,7 @@ void Foam::fv::canopySource::readLanduseClasses()
            << "\t" << lu.LAI() << "\t" << lu.z0() << "\t" << lu.height()
            << "\t" << lu.LADmax() << endl;
   }
-
+  Info << endl;
 }
 
 
@@ -194,6 +199,8 @@ bool Foam::fv::canopySource::read(const dictionary& dict)
     readCanopyHeightFromRaster_ = coeffs_.lookupOrDefault("readCanopyHeightFromRaster", false, false, false);
     writeFields_ = coeffs_.lookupOrDefault("writeFields", false, false, false);
     
+    readLanduseClasses();
+
     if (readLanduseFromRaster_ ) {
       fileName landuseRasterFileName;
       coeffs_.lookup("landuseRasterFileName") >>  landuseRasterFileName;
@@ -205,8 +212,6 @@ bool Foam::fv::canopySource::read(const dictionary& dict)
       coeffs_.lookup("canopyHeightRasterFileName") >>  canopyHeightRasterFileName;
       canopyHeightRaster_ = readRaster(canopyHeightRasterFileName);
     }
-
-    readLanduseClasses();
 
     // read landuse codes for each patch
     if (!readLanduseFromRaster_) {
@@ -296,7 +301,9 @@ void Foam::fv::canopySource::setPatchLanduse(
       else
         lu = patchLanduseTable_[patch];
 
-      if (readCanopyHeightFromRaster_)
+      if (readCanopyHeightFromRaster_ 
+          && lu.LADmax() > 0 
+          && canopyHeightRaster_.inside(double(x), double(y)))
         height = canopyHeightRaster_.getValue(double(x), double(y));
       else
         height = lu.height();
@@ -342,6 +349,7 @@ void Foam::fv::canopySource::calculateCanopy()
 
   if (landuseHeader.typeHeaderOk<volScalarField>(true)) {
     _landuse_from_disk = true;
+    Info << "    Reading existing landuse field" << endl;
     landuse.reset
     (
         new volScalarField
@@ -390,6 +398,7 @@ void Foam::fv::canopySource::calculateCanopy()
 
   if (z0Header.typeHeaderOk<volScalarField>(true)) {
     _z0_from_disk = true;
+    Info << "    Reading existing z0 field" << endl;
     z0.reset
     (
         new volScalarField
@@ -438,7 +447,7 @@ void Foam::fv::canopySource::calculateCanopy()
 
   if (LADHeader.typeHeaderOk<volScalarField>(true)) {
     _LAD_from_disk = true;
-    
+    Info << "    Reading existing LAD field" << endl;    
     LAD.reset
     (
        new volScalarField

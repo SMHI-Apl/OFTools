@@ -35,6 +35,7 @@ public:
  
         bool conformal(const Raster &rast); 
         bool match(const Raster &rast);
+        bool inside(double x, double y);
  
         double interpValue(double x, double y);
         double getValue(double x, double y);	

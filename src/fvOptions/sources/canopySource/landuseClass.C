@@ -12,19 +12,10 @@ namespace Foam
   
     code_ = -1;
     name_ = word("default");
-    // Cd_.dimensions() = dimensionSet(0,0,0,0,0,0,0); 
     Cd_=0;
-
-    //LAI_.dimensions() = dimensionSet(0,0,0,0,0,0,0); 
     LAI_=0;
-    
-    //z0_.dimensions() = dimensionSet(0,1,0,0,0,0,0);
     z0_=0;
-    
-    //height_.dimensions() = dimensionSet(0,1,0,0,0,0,0);
     height_=0;
-    
-    //LADmax_.dimensions() = dimensionSet(0,-1,0,0,0,0,0);
     LADmax_=0;
   }
 
@@ -43,7 +34,8 @@ namespace Foam
     LAI_ = landuseClassDict.lookupOrDefault("LAI", 0.0, false, false);
     LADmax_ = landuseClassDict.lookupOrDefault("LADmax", -1.0, false, false);
     
-    landuseClassDict.lookup("LADProfile", true) >> LADProfile_;
+    if (landuseClassDict.found("LADProfile"))
+      landuseClassDict.lookup("LADProfile", false, false) >> LADProfile_;
     
     if (LADmax_ == -1.0) {
       LADmaxFromLAI();

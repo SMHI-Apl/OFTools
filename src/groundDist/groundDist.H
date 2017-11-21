@@ -55,6 +55,9 @@ Description
 SourceFiles
     groundDist.C
 
+Modified from general wallDistance to distance from specified patches by David Segersson
+Swedish Meteorological and Hydrological Institute, david.segersson@smhi.se
+
 \*---------------------------------------------------------------------------*/
 
 #ifndef groundDist_H

@@ -49,6 +49,10 @@ Usage
         readCanopyHeightFromRaster on;              // read canopy height from raster
         sourcePatches              (ground forest); // for which patches to set landuse
         patchLanduse               (0 1);           // landuse code per patch (if not read from raster)
+       
+        translateRaster            (0 0 0);         // translate raster to mesh coordinate sys.
+
+        LADProfile ( 0.05 0.1 0.15 0.35 1.1 0.9 0.5 0.2 0.15 0.05 0.01 );  // default LAD profile
 
         landuse
         {
@@ -78,7 +82,6 @@ Usage
                 LAI 0;
                 z0 0.06;
                 height 0;
-                LADProfile ( 0.05 0.1 0.15 0.35 1.1 0.9 0.5 0.2 0.15 0.05 0.01 );
             };
 
         };
@@ -135,9 +138,8 @@ protected:
         Switch readCanopyHeightFromRaster_;
         Raster canopyHeightRaster_;
 
-        // translation from coordiantes in raster to coordinates in mesh
-        scalar originOffsetX_;
-        scalar originOffsetY_;
+        // translation vector from coordiantes in raster to coordinates in mesh
+        vector translateRaster;
 
         Switch writeFields_;
 
@@ -177,7 +179,7 @@ protected:
                              volScalarField &LAD, volScalarField &z0,
                              volScalarField &nut, volScalarField &d);
         void calculateCanopy();
-  void readLanduseClasses();
+        void readLanduseClasses();
 
   
 public:
@@ -189,14 +191,14 @@ public:
 
     // Constructors
 
-        //- Construct from components
-        canopySource
-        (
-            const word& name,
-            const word& modelType,
-            const dictionary& dict,
-            const fvMesh& mesh
-        );
+    //- Construct from components
+    canopySource
+    (
+       const word& name,
+       const word& modelType,
+       const dictionary& dict,
+       const fvMesh& mesh
+    );
 
 
     //- Destructor
@@ -205,9 +207,8 @@ public:
 
 
     // Member Functions
-
-        //- Read dictionary
-        bool read(const dictionary& dict);
+    //- Read dictionary
+    bool read(const dictionary& dict);
 
 };
 
