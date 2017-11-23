@@ -68,22 +68,16 @@ Description
     
 
     Reference:
-        Mochida A., Tabata Y., Iwata T., Yoshino H., Examining tree canopy models for CFD prediction
-        of wind environment at pedestrian level, J. Wind Eng. Ind.
-        Aerodyn. 96 (2008) 1667-1677.
+        Mochida A., Tabata Y., Iwata T., Yoshino H., Examining tree canopy models for
+        CFD prediction of wind environment at pedestrian level,
+        J. Wind Eng. Ind. Aerodyn. 96 (2008) 1667-1677.
     
-        Svensson, U., Häggkvist, K. A two-equation turbulence model for canopy flows. J. Wind Eng. Ind.
-        Aerodyn. 35 (1990) 201–211.
+        Svensson, U., Häggkvist, K. A two-equation turbulence model for canopy flows.
+        J. Wind Eng. Ind. Aerodyn. 35 (1990) 201–211.
     
 Usage
-    Example usage:
-    \verbatim
-    SBM
-    {
-        type            svenssonHaggkvistCanopySource;
-        active          on;
-    }
-    \endverbatim
+    same constant/fvOptions dictionary as canopySource,
+    but with type = svenssonHaggkvistCanopySource
 
 SourceFiles
     svenssonHaggkvistCanopySource.C

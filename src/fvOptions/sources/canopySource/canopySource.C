@@ -29,7 +29,7 @@ License
 #include "fvCFD.H"
 #include "addToRunTimeSelectionTable.H"
 #include "groundDist.H"
-
+#include <iostream>
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
@@ -194,6 +194,9 @@ bool Foam::fv::canopySource::read(const dictionary& dict)
 
     // for which patches to set landuse
     coeffs_.lookup("sourcePatches") >> sourcePatches_;
+  
+    // read from disk if present
+    readFromDisk_ = coeffs_.lookupOrDefault("readFromDisk", false, false, false);
 
     readLanduseFromRaster_ = coeffs_.lookupOrDefault("readLanduseFromRaster", false, false, false);
     readCanopyHeightFromRaster_ = coeffs_.lookupOrDefault("readCanopyHeightFromRaster", false, false, false);
@@ -261,7 +264,6 @@ void Foam::fv::canopySource::setPatchLanduse(
    
   Foam::fvPatchScalarField& patchLanduse = landuse.boundaryFieldRef()[patch];
   Foam::fvPatchScalarField& patchZ0 = z0.boundaryFieldRef()[patch];
-
   forAll(patchLanduse,facei)
     {
       
@@ -275,15 +277,15 @@ void Foam::fv::canopySource::setPatchLanduse(
         lu = patchLanduseTable_[patch];
       }
 
-      if (!_landuse_from_disk)
+      if (!landuse_from_disk_)
         patchLanduse[facei] = scalar(lu.code());
-      
-      if (!_z0_from_disk)
+
+      if (!z0_from_disk_)
         patchZ0[facei] = lu.z0();
 
       // z0 for actual calculations is stored as scalarField 
       // within boundary condition dictionary of nut
-      nutZ0[facei] = patchZ0[facei];
+      nutZ0[facei] = patchZ0[facei];      
     }
 
   forAll(d.internalField(), celli)
@@ -303,13 +305,16 @@ void Foam::fv::canopySource::setPatchLanduse(
 
       if (readCanopyHeightFromRaster_ 
           && lu.LADmax() > 0 
-          && canopyHeightRaster_.inside(double(x), double(y)))
+          && canopyHeightRaster_.inside(double(x), double(y))) {
         height = canopyHeightRaster_.getValue(double(x), double(y));
+      }
       else
         height = lu.height();
 
       // set landuse up to canopy height and LAD according to LADProfile
       scalar patchDistance = d.internalField()[celli];
+      if (patchDistance < 0)
+        cout<<"patchDistance: " << patchDistance<<'\n';
       if (patchDistance < height && height > 0)
 	{
 	  landuse.primitiveFieldRef()[celli] = scalar(lu.code());
@@ -347,8 +352,8 @@ void Foam::fv::canopySource::calculateCanopy()
       false
   );
 
-  if (landuseHeader.typeHeaderOk<volScalarField>(true)) {
-    _landuse_from_disk = true;
+  if (landuseHeader.typeHeaderOk<volScalarField>(true) && readFromDisk_) {
+    landuse_from_disk_ = true;
     Info << "    Reading existing landuse field" << endl;
     landuse.reset
     (
@@ -367,6 +372,7 @@ void Foam::fv::canopySource::calculateCanopy()
      );
   }
   else {
+    landuse_from_disk_ = false;
     landuse.reset
     (
         new volScalarField
@@ -396,8 +402,8 @@ void Foam::fv::canopySource::calculateCanopy()
       false
   );
 
-  if (z0Header.typeHeaderOk<volScalarField>(true)) {
-    _z0_from_disk = true;
+  if (z0Header.typeHeaderOk<volScalarField>(true)  && readFromDisk_) {
+    z0_from_disk_ = true;
     Info << "    Reading existing z0 field" << endl;
     z0.reset
     (
@@ -416,6 +422,7 @@ void Foam::fv::canopySource::calculateCanopy()
      );
   }
   else {
+    z0_from_disk_ = false;
     z0.reset
     (
         new volScalarField
@@ -445,8 +452,8 @@ void Foam::fv::canopySource::calculateCanopy()
       false
   );
 
-  if (LADHeader.typeHeaderOk<volScalarField>(true)) {
-    _LAD_from_disk = true;
+  if (LADHeader.typeHeaderOk<volScalarField>(true)  && readFromDisk_) {
+    LAD_from_disk_ = true;
     Info << "    Reading existing LAD field" << endl;    
     LAD.reset
     (
@@ -466,6 +473,7 @@ void Foam::fv::canopySource::calculateCanopy()
   }
   else 
   {
+    LAD_from_disk_ = false;
     LAD.reset
     (
         new volScalarField

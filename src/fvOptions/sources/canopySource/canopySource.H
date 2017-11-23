@@ -45,8 +45,9 @@ Usage
         type                       canopySource;
         active                     on;              // toggle the option
         writeFields                on;              // write to disk
-        readLanduseFromRaster      on;              // read landuse from raster
-        readCanopyHeightFromRaster on;              // read canopy height from raster
+        readFromDisk               off;             // if present, read fields landuse, z0, LAD from disk
+        readLanduseFromRaster      off;             // read landuse from raster
+        readCanopyHeightFromRaster off;             // read canopy height from raster
         sourcePatches              (ground forest); // for which patches to set landuse
         patchLanduse               (0 1);           // landuse code per patch (if not read from raster)
        
@@ -130,6 +131,9 @@ protected:
         HashTable<landuseClass, label> landuseTable_;
         HashTable<landuseClass, label> patchLanduseTable_;
 
+        // read landuse, z0 and LAD from disk if they are present
+        Switch readFromDisk_;
+
         // read landuse from raster instead of specifying per patch
         Switch readLanduseFromRaster_;
         Raster landuseRaster_;
@@ -145,9 +149,9 @@ protected:
 
         // if variables are present on disk, they are read instead of calculated
         // this allows setting the data with external programs
-        bool _LAD_from_disk;
-        bool _landuse_from_disk;
-        bool _z0_from_disk;
+        bool LAD_from_disk_;
+        bool landuse_from_disk_;
+        bool z0_from_disk_;
 
         //- Source terms to momentum equation (for solvers with and without explicit density)
         void addSup
