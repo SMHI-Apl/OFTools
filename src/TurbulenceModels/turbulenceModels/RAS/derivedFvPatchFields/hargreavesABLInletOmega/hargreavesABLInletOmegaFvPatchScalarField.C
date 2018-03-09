@@ -23,7 +23,7 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "hargreavesABLInletEpsilonFvPatchScalarField.H"
+#include "hargreavesABLInletOmegaFvPatchScalarField.H"
 #include "addToRunTimeSelectionTable.H"
 #include "fvPatchFieldMapper.H"
 #include "volFields.H"
@@ -36,8 +36,8 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-hargreavesABLInletEpsilonFvPatchScalarField::
-hargreavesABLInletEpsilonFvPatchScalarField
+hargreavesABLInletOmegaFvPatchScalarField::
+hargreavesABLInletOmegaFvPatchScalarField
 (
     const fvPatch& p,
     const DimensionedField<scalar, volMesh>& iF
@@ -48,8 +48,8 @@ hargreavesABLInletEpsilonFvPatchScalarField
 {}
 
 
-hargreavesABLInletEpsilonFvPatchScalarField::
-hargreavesABLInletEpsilonFvPatchScalarField
+hargreavesABLInletOmegaFvPatchScalarField::
+hargreavesABLInletOmegaFvPatchScalarField
 (
     const fvPatch& p,
     const DimensionedField<scalar, volMesh>& iF,
@@ -63,10 +63,10 @@ hargreavesABLInletEpsilonFvPatchScalarField
 }
 
 
-hargreavesABLInletEpsilonFvPatchScalarField::
-hargreavesABLInletEpsilonFvPatchScalarField
+hargreavesABLInletOmegaFvPatchScalarField::
+hargreavesABLInletOmegaFvPatchScalarField
 (
-    const hargreavesABLInletEpsilonFvPatchScalarField& psf,
+    const hargreavesABLInletOmegaFvPatchScalarField& psf,
     const fvPatch& p,
     const DimensionedField<scalar, volMesh>& iF,
     const fvPatchFieldMapper& mapper
@@ -77,10 +77,10 @@ hargreavesABLInletEpsilonFvPatchScalarField
 {}
 
 
-hargreavesABLInletEpsilonFvPatchScalarField::
-hargreavesABLInletEpsilonFvPatchScalarField
+hargreavesABLInletOmegaFvPatchScalarField::
+hargreavesABLInletOmegaFvPatchScalarField
 (
-    const hargreavesABLInletEpsilonFvPatchScalarField& psf,
+    const hargreavesABLInletOmegaFvPatchScalarField& psf,
     const DimensionedField<scalar, volMesh>& iF
 )
 :
@@ -91,7 +91,7 @@ hargreavesABLInletEpsilonFvPatchScalarField
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void hargreavesABLInletEpsilonFvPatchScalarField::autoMap
+void hargreavesABLInletOmegaFvPatchScalarField::autoMap
 (
     const fvPatchFieldMapper& m
 )
@@ -101,7 +101,7 @@ void hargreavesABLInletEpsilonFvPatchScalarField::autoMap
 }
 
 
-void hargreavesABLInletEpsilonFvPatchScalarField::rmap
+void hargreavesABLInletOmegaFvPatchScalarField::rmap
 (
     const fvPatchScalarField& psf,
     const labelList& addr
@@ -109,14 +109,14 @@ void hargreavesABLInletEpsilonFvPatchScalarField::rmap
 {
     fixedValueFvPatchScalarField::rmap(psf, addr);
 
-    const hargreavesABLInletEpsilonFvPatchScalarField& blpsf =
-        refCast<const hargreavesABLInletEpsilonFvPatchScalarField>(psf);
+    const hargreavesABLInletOmegaFvPatchScalarField& blpsf =
+        refCast<const hargreavesABLInletOmegaFvPatchScalarField>(psf);
 
     hargreavesABL::rmap(blpsf, addr);
 }
 
 
-void hargreavesABLInletEpsilonFvPatchScalarField::write(Ostream& os) const
+void hargreavesABLInletOmegaFvPatchScalarField::write(Ostream& os) const
 {
     fvPatchScalarField::write(os);
     hargreavesABL::write(os);
@@ -129,7 +129,7 @@ void hargreavesABLInletEpsilonFvPatchScalarField::write(Ostream& os) const
 makePatchTypeField
 (
     fvPatchScalarField,
-    hargreavesABLInletEpsilonFvPatchScalarField
+    hargreavesABLInletOmegaFvPatchScalarField
 );
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

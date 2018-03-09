@@ -56,8 +56,8 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef hargreavesABLInletEpsilonFvPatchScalarField_H
-#define hargreavesABLInletEpsilonFvPatchScalarField_H
+#ifndef hargreavesABLInletOmegaFvPatchScalarField_H
+#define hargreavesABLInletOmegaFvPatchScalarField_H
 
 #include "fvPatchFields.H"
 #include "fixedValueFvPatchFields.H"
@@ -69,10 +69,10 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-        Class hargreavesABLInletEpsilonFvPatchScalarField Declaration
+        Class hargreavesABLInletOmegaFvPatchScalarField Declaration
 \*---------------------------------------------------------------------------*/
 
-class hargreavesABLInletEpsilonFvPatchScalarField
+class hargreavesABLInletOmegaFvPatchScalarField
 :
     public fixedValueFvPatchScalarField,
     public hargreavesABL
@@ -81,20 +81,20 @@ class hargreavesABLInletEpsilonFvPatchScalarField
 public:
 
     //- Runtime type information
-    TypeName("hargreavesABLInletEpsilon");
+    TypeName("hargreavesABLInletOmega");
 
 
     // Constructors
 
         //- Construct from patch and internal field
-        hargreavesABLInletEpsilonFvPatchScalarField
+        hargreavesABLInletOmegaFvPatchScalarField
         (
             const fvPatch&,
             const DimensionedField<scalar, volMesh>&
         );
 
         //- Construct from patch, internal field and dictionary
-        hargreavesABLInletEpsilonFvPatchScalarField
+        hargreavesABLInletOmegaFvPatchScalarField
         (
             const fvPatch&,
             const DimensionedField<scalar, volMesh>&,
@@ -102,10 +102,10 @@ public:
         );
 
         //- Construct by mapping given
-        //  hargreavesABLInletEpsilonFvPatchScalarField onto a new patch
-        hargreavesABLInletEpsilonFvPatchScalarField
+        //  hargreavesABLInletOmegaFvPatchScalarField onto a new patch
+        hargreavesABLInletOmegaFvPatchScalarField
         (
-            const hargreavesABLInletEpsilonFvPatchScalarField&,
+            const hargreavesABLInletOmegaFvPatchScalarField&,
             const fvPatch&,
             const DimensionedField<scalar, volMesh>&,
             const fvPatchFieldMapper&
@@ -116,14 +116,14 @@ public:
         {
             return tmp<fvPatchScalarField>
             (
-                new hargreavesABLInletEpsilonFvPatchScalarField(*this)
+                new hargreavesABLInletOmegaFvPatchScalarField(*this)
             );
         }
 
         //- Construct as copy setting internal field reference
-        hargreavesABLInletEpsilonFvPatchScalarField
+        hargreavesABLInletOmegaFvPatchScalarField
         (
-            const hargreavesABLInletEpsilonFvPatchScalarField&,
+            const hargreavesABLInletOmegaFvPatchScalarField&,
             const DimensionedField<scalar, volMesh>&
         );
 
@@ -135,7 +135,7 @@ public:
         {
             return tmp<fvPatchScalarField>
             (
-                new hargreavesABLInletEpsilonFvPatchScalarField(*this, iF)
+                new hargreavesABLInletOmegaFvPatchScalarField(*this, iF)
             );
         }
 
