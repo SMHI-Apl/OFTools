@@ -142,6 +142,9 @@ class hargreavesABL
         //- Turbulent viscosity coefficient
         const scalar Cmu_;
 
+        //- Turbulent viscosity coefficient for Omega
+        const scalar beta_;
+
         //- Reference velocity
         const scalar Uref_;
 
