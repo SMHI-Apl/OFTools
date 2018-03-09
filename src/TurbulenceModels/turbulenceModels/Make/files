@@ -1,3 +1,12 @@
 makeTurModel.C
 
 LIB = $(FOAM_USER_LIBBIN)/libABLTurbulenceModels
+
+
+RASBCs = RAS/derivedFvPatchFields
+
+/* Atmospheric boundary layer BCs */
+$(RASBCs)/hargreavesABL/hargreavesABL.C
+$(RASBCs)/hargreavesABLInletVelocity/hargreavesABLInletVelocityFvPatchVectorField.C
+$(RASBCs)/hargreavesABLInletK/hargreavesABLInletKFvPatchScalarField.C
+$(RASBCs)/hargreavesABLInletEpsilon/hargreavesABLInletEpsilonFvPatchScalarField.C

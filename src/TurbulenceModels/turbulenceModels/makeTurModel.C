@@ -29,13 +29,13 @@ License
 
 
 #define makeBaseTurbulenceModel(Alpha, Rho, baseModel, BaseModel, Transport) \
-  namespace Foam                                                             \
-  {                                                                          \
-                                                                             \
-      typedef BaseModel<Transport> Transport##BaseModel;                     \
-      typedef RASModel<Transport##BaseModel> RAS##Transport##BaseModel;      \
-      typedef LESModel<Transport##BaseModel> LES##Transport##BaseModel;      \
-  }  
+   namespace Foam                                                             \
+   {                                                                          \
+                                                                              \
+       typedef BaseModel<Transport> Transport##BaseModel;                     \
+       typedef RASModel<Transport##BaseModel> RAS##Transport##BaseModel;      \
+       typedef LESModel<Transport##BaseModel> LES##Transport##BaseModel;      \
+   }
 
 
 
