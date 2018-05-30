@@ -60,10 +60,10 @@ int main(int argc, char *argv[])
     if(!topo.read(topoName.c_str()))
     FatalErrorIn(args.executable())<< "Cannot read file "<< topoName << exit(FatalError);
 
-    topo.xll=topo.xll-double(subtractedX);
-    topo.xur=topo.xur-double(subtractedX);
-    topo.yll=topo.yll-double(subtractedY);
-    topo.yur=topo.yur-double(subtractedY);
+    topo.xll = topo.xll - double(subtractedX);
+    topo.xur = topo.xur - double(subtractedX);
+    topo.yll = topo.yll - double(subtractedY);
+    topo.yur = topo.yur - double(subtractedY);
 
 
     Info<<"-----------Topography specification-------------"<<endl;
@@ -114,26 +114,16 @@ int main(int argc, char *argv[])
     Info<< "The min height of the topography in the domain is "<< offset << endl;
     
     roof = roof + offset;
-    scalar totDist = roof - offset;
-
     forAll(points,pInd)
       {
-	vector& p=points[pInd];
-	scalar ground       = topo.interpValue(double(p.x()),double(p.y()));
-        scalar pointDist    = roof - p.z();
+	vector& p = points[pInd];
+	scalar ground       = topo.interpValue(double(p.x()), double(p.y()));
         scalar undampedMove = ground - offset;
-        scalar dampedMove   = undampedMove * (roof-p.z())/(roof-ground);
+        scalar dampedMove   = undampedMove * (roof - p.z()) / (roof - ground);
         
-//        Info<< "offset: "<< offset << endl;
-//        Info<< "ground: "<< ground << endl;
-//        Info<< "pointDist: "<< pointDist << endl;
-//        Info<< "undampedMove: "<< undampedMove << endl;
-//        Info<< "dampedMove: "<< dampedMove << endl;
-//        Info<< "p.z(): "<< p.z() << endl;
-
 	p.z() = p.z() + offset;
 	p.z() = p.z() + dampedMove;
-	  // p.z()=(p.z()-height)*(roof-ground-height)/(roof-height)+ground+height;
+	// p.z()=(p.z()-height)*(roof-ground-height)/(roof-height)+ground+height;
       }
 
     //    if (args.options().found("scale"))
