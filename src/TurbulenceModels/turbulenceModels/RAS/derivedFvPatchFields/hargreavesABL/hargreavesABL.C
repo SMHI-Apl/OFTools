@@ -38,6 +38,7 @@ hargreavesABL::hargreavesABL()
     zDir_(Zero),
     kappa_(0.41),
     Cmu_(0.09),
+    beta_(0.09),
     Uref_(0),
     Zref_(0),
     z0_(0),
@@ -53,6 +54,7 @@ hargreavesABL::hargreavesABL(const vectorField& p, const dictionary& dict)
     zDir_(dict.lookup("zDir")),
     kappa_(dict.lookupOrDefault<scalar>("kappa", 0.41)),
     Cmu_(dict.lookupOrDefault<scalar>("Cmu", 0.09)),
+    beta_(dict.lookupOrDefault<scalar>("beta", 0.09)),
     Uref_(readScalar(dict.lookup("Uref"))),
     Zref_(readScalar(dict.lookup("Zref"))),
     z0_("z0", dict, p.size()),
@@ -84,6 +86,7 @@ hargreavesABL::hargreavesABL
     zDir_(ptf.zDir_),
     kappa_(ptf.kappa_),
     Cmu_(ptf.Cmu_),
+    beta_(ptf.beta_),
     Uref_(ptf.Uref_),
     Zref_(ptf.Zref_),
     z0_(ptf.z0_, mapper),
@@ -98,6 +101,7 @@ hargreavesABL::hargreavesABL(const hargreavesABL& blpvf)
     zDir_(blpvf.zDir_),
     kappa_(blpvf.kappa_),
     Cmu_(blpvf.Cmu_),
+    beta_(blpvf.beta_),
     Uref_(blpvf.Uref_),
     Zref_(blpvf.Zref_),
     z0_(blpvf.z0_),
@@ -170,6 +174,8 @@ void hargreavesABL::write(Ostream& os) const
         << kappa_ << token::END_STATEMENT << nl;
     os.writeKeyword("Cmu")
         << Cmu_ << token::END_STATEMENT << nl;
+    os.writeKeyword("beta")
+        << beta_ << token::END_STATEMENT << nl;
     os.writeKeyword("Uref")
         << Uref_ << token::END_STATEMENT << nl;
     os.writeKeyword("Zref")

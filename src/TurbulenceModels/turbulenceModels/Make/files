@@ -9,4 +9,5 @@ RASBCs = RAS/derivedFvPatchFields
 $(RASBCs)/hargreavesABL/hargreavesABL.C
 $(RASBCs)/hargreavesABLInletVelocity/hargreavesABLInletVelocityFvPatchVectorField.C
 $(RASBCs)/hargreavesABLInletK/hargreavesABLInletKFvPatchScalarField.C
+$(RASBCs)/hargreavesABLInletOmega/hargreavesABLInletOmegaFvPatchScalarField.C
 $(RASBCs)/hargreavesABLInletEpsilon/hargreavesABLInletEpsilonFvPatchScalarField.C
