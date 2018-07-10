@@ -60,10 +60,10 @@ int main(int argc, char *argv[])
     if(!topo.read(topoName.c_str()))
     FatalErrorIn(args.executable())<< "Cannot read file "<< topoName << exit(FatalError);
 
-    topo.xll = topo.xll - double(subtractedX);
-    topo.xur = topo.xur - double(subtractedX);
-    topo.yll = topo.yll - double(subtractedY);
-    topo.yur = topo.yur - double(subtractedY);
+    topo.xll=topo.xll-double(subtractedX);
+    topo.xur=topo.xur-double(subtractedX);
+    topo.yll=topo.yll-double(subtractedY);
+    topo.yur=topo.yur-double(subtractedY);
 
 
     Info<<"-----------Topography specification-------------"<<endl;
@@ -88,17 +88,9 @@ int main(int argc, char *argv[])
         )
     );
 
-   // scalar height=50; not in use
-
-  /* if (args.options().found("height"))
-      {
-	IStringStream instr(args.options()["height"]);
-	instr >> height;
-      }
-    Info<< "Points are set to follow ground up to " << height << " m"<<endl;
- */
     scalar roof=-9999;
     scalar offset=9e99;
+    scalar offsetMax=-9e99;
     forAll(points,pInd)
       {
 	vector& p=points[pInd];
@@ -108,38 +100,41 @@ int main(int argc, char *argv[])
 	scalar ground = topo.interpValue(double(p.x()),double(p.y()));
 	if(ground < offset)
 	  offset=ground;
+	if(ground > offsetMax)
+	  offsetMax=ground;
       }
 
     Info<< "The maximum height of the mesh is "<< roof << endl;
     Info<< "The min height of the topography in the domain is "<< offset << endl;
+    Info<< "The max height of the topography in the domain is "<< offsetMax << endl;
     
     roof = roof + offset;
+
+    scalar dampedMove0=-9999;
+
     forAll(points,pInd)
       {
-	vector& p = points[pInd];
-	scalar ground       = topo.interpValue(double(p.x()), double(p.y()));
-        scalar undampedMove = ground - offset;
-        scalar dampedMove   = undampedMove * (roof - p.z()) / (roof - ground);
-        
+	vector& p=points[pInd];
+	scalar ground       = topo.interpValue(double(p.x()),double(p.y()));
+
+	// move all points to lowest level of topo
 	p.z() = p.z() + offset;
+	
+	// points will be moved further by maximum (ground-offset)
+	scalar maxMove = ground - offset;
+        scalar dampedMove   = maxMove * (roof-p.z())/(roof-offset);
+        
 	p.z() = p.z() + dampedMove;
-	// p.z()=(p.z()-height)*(roof-ground-height)/(roof-height)+ground+height;
+
+	if(dampedMove > dampedMove0)
+	  dampedMove0=dampedMove;
+
+
       }
 
-    //    if (args.options().found("scale"))
-    //{
-    //    vector scaleVector(IStringStream(args.options()["scale"])());
-    //
-    //  Info<< "Scaling points by " << scaleVector << endl;
-    //
-    //  points.replace(vector::X, scaleVector.x()*points.component(vector::X));
-    //  points.replace(vector::Y, scaleVector.y()*points.component(vector::Y));
-    //  points.replace(vector::Z, scaleVector.z()*points.component(vector::Z));
-    //}
-
-    // Set the precision of the points data to 10
     IOstream::defaultPrecision(10);
 
+    Info << "The maximum movement of mesh is "<< dampedMove0 << endl;
     Info << "Writing modified points into directory " << points.path() << nl << endl;
     points.write();
 

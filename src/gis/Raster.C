@@ -16,8 +16,8 @@ Raster::Raster(int NROWS, int NCOLS, double XLL, double YLL,double CELLSIZE ,int
  ncols=NCOLS;
  xll=XLL;
  yll=YLL;
- xur=XLL+NCOLS*CELLSIZE;
- yur=YLL+NROWS*CELLSIZE;
+ xur=XLL+(NCOLS-1)*CELLSIZE;
+ yur=YLL+(NROWS-1)*CELLSIZE;
  nodata=NODATA;
  cellsize=CELLSIZE;
  std::vector<double> rasterRow(NCOLS,VALUE);
@@ -105,8 +105,8 @@ int Raster::read(const char fileName[])
        if(ncols==0 or nrows==0)
 	 return 0;
 
-       xur=xll+ncols*cellsize;
-       yur=yll+nrows*cellsize;     
+       xur=xll+(ncols-1)*cellsize;
+       yur=yll+(nrows-1)*cellsize;     
 
        double value;
        for (int row=0;row<nrows;row++)
@@ -148,16 +148,20 @@ Raster& Raster::operator=(const Raster &rhs)
 
 int Raster::getIndex(double x, double y,int& row, int& col)
 {
-    if((x<xll or y<yll) or (x > xur or y > yur))
-      return 0;   
-    else
+
+  if((x<xll+cellsize*0.5 or y<yll+cellsize*0.5) or (x > xur+cellsize*0.5 or y > yur+cellsize*0.5))
+    return 0;   
+  else
     {
-     	col=int((x-xll)/cellsize);
-        row=nrows-int(ceil((y-yll)/cellsize));
+
+      row=nrows-int((y-(yll+0.5*cellsize))/cellsize)-1;
+      col=int((x-(xll+0.5*cellsize))/cellsize);
+   
         if(row == nrows)
             row--;
         if(col == ncols)
-            col--;            
+            col--;
+
         return 1;
     }
 }
@@ -190,7 +194,7 @@ double Raster::getX(int col)
 
 double Raster::getY(int row)
 {
-  return yll+row*cellsize+0.5*cellsize;
+  return yll+(nrows-(row+1))*cellsize+0.5*cellsize;
 } 
 
 
@@ -261,45 +265,125 @@ double Raster::interpValue(double x, double y)
   
   if(!getIndex(x,y,row,col))
     {
-      std::cout<<"Value is outside of raster boundaries";
+      std::cout<<"interpValue: Value is outside of raster boundaries";
+      std::cout<<"\n: x="<<x;
+      std::cout<<"\n: y="<<y;
       exit(1);
     }
 
   
   int kvadrant=0;
-  if(x>=this->getX(col) and y>=this->getY(row))
+
+  if(x==this->getX(col) and y==this->getY(row))
+    kvadrant=0;
+  else if(x>this->getX(col) and y>this->getY(row))
     kvadrant=1;
-  else if(x>=this->getX(col) and y<this->getY(row))
+  else if(x<this->getX(col) and y>this->getY(row))
     kvadrant=2;
-  else if(y>=this->getY(row))
-    kvadrant=4;
-  else
+  else if(x<this->getX(col) and y<this->getY(row))
     kvadrant=3;
-  
+  else if(x>this->getX(col) and y<this->getY(row))
+    kvadrant=4;
+  else if(x==this->getX(col) and y>this->getY(row))
+    kvadrant=5;
+  else if(x==this->getX(col) and y<this->getY(row))
+    kvadrant=6;
+  else if(x>this->getX(col) and y==this->getY(row))
+    kvadrant=7;
+  else if(x<this->getX(col) and y==this->getY(row))
+    kvadrant=8;
+
   
   int row1,row2,row3,row4,col1,col2,col3,col4;
-  
+
+  // def of kvadrant# changed to mathematical std def
+  //  2|1
+  //  -+-
+  //  3|4
+
   switch (kvadrant)
     { 
-    case 1:
+    case 0:
+
       row1=row;
       col1=col;
-      row2=row-1;
+      row2=row;
       col2=col;
-      row3=row-1;
-      col3=col+1;
+      row3=row;
+      col3=col;
       row4=row;
+      col4=col;
+
+      break;
+
+    case 1:
+      row1=row-1;
+      col1=col;
+      row2=row;
+      col2=col;
+      row3=row;
+      col3=col+1;
+      row4=row-1;
       col4=col+1;
 
-
-      if (row2<0 or col4>=this->ncols)
+      if (row1<0 or col3>=this->ncols)
 	{
-	  std::cout<<"Value is outside of raster boundaries";
+	  std::cout<<"1: Value is outside of raster boundaries";
+	  std::cout<<": row1="<<row1;
+	  std::cout<<": col3="<<col3;
+	  std::cout<<": x="<<x;
+	  std::cout<<": y="<<y;
+	  std::cout<<"\n";
 	  exit(1);
 	}
       break;
       
     case 2:
+      row1=row-1;
+      col1=col-1;
+      row2=row;
+      col2=col-1;
+      row3=row;
+      col3=col;
+      row4=row-1;
+      col4=col;
+
+      if (row1<0 or col1<0)
+	{
+	  std::cout<<"2: Value is outside of raster boundaries";
+	  std::cout<<": row1="<<row1;
+	  std::cout<<": col1="<<col1;
+	  std::cout<<": x="<<x;
+	  std::cout<<": y="<<y;
+	  std::cout<<"\n";
+	  exit(1);
+	}
+
+      break;
+
+    case 3:
+      row1=row;
+      col1=col-1;
+      row2=row+1;
+      col2=col-1;
+      row3=row+1;
+      col3=col;
+      row4=row;
+      col4=col;
+      if (row2>=this->nrows or col2<0)
+	{
+	  std::cout<<"3: Value is outside of raster boundaries";
+	  std::cout<<": row2="<<row2;
+	  std::cout<<": col2="<<col2;
+	  std::cout<<": x="<<x;
+	  std::cout<<": y="<<y;
+	  std::cout<<"\n";
+	  exit(1);
+	}
+
+      break;
+      
+    case 4:
       row1=row;
       col1=col;
       row2=row+1;
@@ -310,48 +394,123 @@ double Raster::interpValue(double x, double y)
       col4=col+1;
       if (row2>=this->nrows or col3>=this->ncols)
 	{
-	  std::cout<<"Value is outside of raster boundaries";
+	  std::cout<<"4: Value is outside of raster boundaries";
+	  std::cout<<": row2="<<row2;
+	  std::cout<<": col3="<<col3;
+	  std::cout<<": x="<<x;
+	  std::cout<<": y="<<y;
+	  std::cout<<"\n";
 	  exit(1);
 	}
 
       break;
       
-    case 3:
+    case 5:
+      row1=row-1;
+      col1=col;
+      row2=row;
+      col2=col;
+      row3=row;
+      col3=col;
+      row4=row-1;
+      col4=col;
+
+      if (row1<0)
+	{
+	  std::cout<<"5: Value is outside of raster boundaries";
+	  std::cout<<": row1="<<row1;
+	  std::cout<<": x="<<x;
+	  std::cout<<": y="<<y;
+	  std::cout<<"\n";
+	  exit(1);
+	}
+      break;
+      
+    case 6:
       row1=row;
       col1=col;
       row2=row+1;
       col2=col;
       row3=row+1;
-      col3=col-1;
+      col3=col;
       row4=row;
-      col4=col-1;
-      if (row2>=this->nrows or col3<0)
+      col4=col;
+
+      if (row2>=this->nrows)
 	{
-	  std::cout<<"Value is outside of raster boundaries";
+	  std::cout<<"6: Value is outside of raster boundaries";
+	  std::cout<<": row2="<<row2;
+	  std::cout<<": x="<<x;
+	  std::cout<<": y="<<y;
+	  std::cout<<"\n";
+	  exit(1);
+	}
+
+      break;
+
+    case 7:
+      row1=row;
+      col1=col;
+      row2=row;
+      col2=col;
+      row3=row;
+      col3=col+1;
+      row4=row;
+      col4=col+1;
+      if (col3>=this->ncols)
+	{
+	  std::cout<<"7: Value is outside of raster boundaries";
+	  std::cout<<": col3="<<col3;
+	  std::cout<<": x="<<x;
+	  std::cout<<": y="<<y;
+	  std::cout<<"\n";
 	  exit(1);
 	}
 
       break;
       
-    case 4:
+    case 8:
       row1=row;
-      col1=col;
-      row2=row-1;
-      col2=col;
-      row3=row-1;
-      col3=col-1;
+      col1=col-1;
+      row2=row;
+      col2=col-1;
+      row3=row;
+      col3=col;
       row4=row;
-      col4=col-1;
-
-      if (row2<0 or col3<0)
+      col4=col;
+      if (col1<0)
 	{
-	  std::cout<<"Value is outside of raster boundaries";
+	  std::cout<<"8: Value is outside of raster boundaries";
+	  std::cout<<": col1="<<col1;
+	  std::cout<<": x="<<x;
+	  std::cout<<": y="<<y;
+	  std::cout<<"\n";
 	  exit(1);
 	}
 
       break;
+      
     }
 	  	  
+  // DEBUG OUTPUT
+  /*
+  std::cout<<"\n ";
+  std::cout<<"\n x="<<x;
+  std::cout<<"\n y="<<y;
+  std::cout<<"\n row1="<<row1;
+  std::cout<<"\n row2="<<row2;
+  std::cout<<"\n row3="<<row3;
+  std::cout<<"\n row4="<<row4;
+  std::cout<<"\n col1="<<col1;
+  std::cout<<"\n col2="<<col2;
+  std::cout<<"\n col3="<<col3;
+  std::cout<<"\n col4="<<col4;
+  std::cout<<"\n x1="<<this->getX(col1);
+  std::cout<<"\n x2="<<this->getX(col4);
+  std::cout<<"\n y1="<<this->getY(row1);
+  std::cout<<"\n y2="<<this->getY(row2);
+  */
+
   d=sqrt(pow(this->getX(col1)-x,2)+pow(this->getY(row1)-y,2));		
   dists.push_back(d);
   vals.push_back(data[row1][col1]);
@@ -364,13 +523,10 @@ double Raster::interpValue(double x, double y)
   dists.push_back(d);
   vals.push_back(data[row3][col3]);
 	
-  
   d=sqrt(pow(this->getX(col4)-x,2)+pow(this->getY(row4)-y,2));		
   dists.push_back(d);
   vals.push_back(data[row4][col4]);
   
-
-       
   double a=0;
   double b=0;
   for(int j=0;j<4;j++)
@@ -384,7 +540,7 @@ double Raster::interpValue(double x, double y)
 	return vals[j];
     }
   return a/b;
-	
+
 }
 
 bool Raster::conformal(const Raster &rast)
