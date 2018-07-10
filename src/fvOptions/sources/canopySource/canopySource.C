@@ -562,6 +562,7 @@ void Foam::fv::canopySource::calculateCanopy()
 
 
   if (writeFields_) {
+    Info << "Writing canopy fields to disk" << endl;
     landuse->write();
     LAD->write();
     z0->write();
