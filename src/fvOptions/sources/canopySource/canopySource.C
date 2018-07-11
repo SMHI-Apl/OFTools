@@ -29,7 +29,9 @@ License
 #include "fvCFD.H"
 #include "addToRunTimeSelectionTable.H"
 #include "groundDist.H"
+#include "IOmanip.H"
 #include <iostream>
+
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
@@ -169,15 +171,30 @@ void Foam::fv::canopySource::readLanduseClasses()
   
   Info << endl
        << "    ---------------------Landuse categories--------------------" << endl;
-  Info << "    name\tcode\tCd\tLAI\tz0\theight\tLADmax" << endl;
+  Info << setf(std::ios::left) << setw(5) << " "
+      << setf(std::ios::left) << setw(40) << "name"
+      << setf(std::ios::left) << setw(8) << "code"
+      << setf(std::ios::left) << setw(8) << "Cd"
+      << setf(std::ios::left) << setw(8) << "LAI"
+      << setf(std::ios::left) << setw(8) << "z0"
+      << setf(std::ios::left) << setw(8) << "height"
+      << setf(std::ios::left) << setw(8) << "LADmax"
+      << endl;
+  
   forAll(landuseNames, i) {
       word name = landuseNames[i];
       //dictionary luDict = landuseDict.subDict(name);
       landuseClass lu(landuseDict, name);
       landuseTable_.insert(lu.code(), lu);
-      Info << "    " << lu.name() << "\t"<< lu.code() << "\t" << lu.Cd()
-           << "\t" << lu.LAI() << "\t" << lu.z0() << "\t" << lu.height()
-           << "\t" << lu.LADmax() << endl;
+      Info << setf(std::ios::left) << setw(5) << " "
+          << setf(std::ios::left) << setw(40) << lu.name()
+          << setf(std::ios::left) << setw(8) << lu.code()
+          << setf(std::ios::left) << setw(8) << lu.Cd()
+          << setf(std::ios::left) << setw(8) << lu.LAI()
+          << setf(std::ios::left) << setw(8) << lu.z0()
+          << setf(std::ios::left) << setw(8) << lu.height()
+          << setf(std::ios::left) << setw(8) << lu.LADmax()
+          << endl;
   }
   Info << endl;
 }
