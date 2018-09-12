@@ -61,14 +61,16 @@ label getDirIndex(SortableList<label> dirs, label dir)
 
 
 int main(int argc, char *argv[])
-{  
-#   include "setRootCase.H"
-#   include "createTime.H"
-#   include "createMesh.H"
-#   include "readWindComfortDict.H"
-#   include "createFields.H"
-
-
+{
+ #include "postProcess.H"
+ #include "setRootCase.H"
+ #include "createTime.H"
+ #include "createMesh.H"
+ #include "createControl.H"
+ #include "createFields.H"
+ #include "readWindComfortDict.H"
+ #include "readWindFields.H"
+    
  label nClasses(80); //It is expected that windspeed is always < 40m/s, 0.5m/s intervals for the classes 
  
  scalar classSize(0.5);
