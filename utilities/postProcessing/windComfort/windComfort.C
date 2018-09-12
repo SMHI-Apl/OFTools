@@ -39,7 +39,7 @@
 #include "SortableList.H"
 #include "OFstream.H"
 #include "IOmanip.H"
-#include "RASModel.H"
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 
@@ -194,15 +194,15 @@ int main(int argc, char *argv[])
 	     
 	     forAll(Uekv.internalField(),celli)
 	       {
-		 if(Uekv.internalField()[celli]>= criteriaUlim)
-		   UekvProc.internalField()[celli]= UekvProc.internalField()[celli] + freqTable[j][i+1];
+		 if(Uekv.internalField()[celli] >= criteriaUlim)
+		   UekvProc.primitiveFieldRef()[celli] = UekvProc.internalField()[celli] + freqTable[j][i+1];
 	       }      
 	   }
        }
      Info<<"UekvProc in ref point: "<<UekvProc.internalField()[refCellIndex]/scalar(metTS.nrows)*100<<"%"<<endl;
    }
 
- UekvProc=UekvProc / scalar(metTS.nrows)*100;
+ UekvProc = UekvProc / scalar(metTS.nrows)*100;
  UekvProc.write();
  UekvMedian.write();
  Info<< "windComfort finished successfully\n" << endl;
